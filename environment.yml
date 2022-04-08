@@ -4,14 +4,13 @@ channels:
   - defaults
 dependencies:
   - python=3.8
+  - beautifulsoup4=4.9.*
   - matplotlib=3.3.*
   - numpy=1.19.*
   - pandas=1.2.*
-  - pandoc=2.11.3.1
-  - pandoc-crossref=0.3.9.0
-  - pip=20.3.3
-  - plotly=4.14.1
-  - python-kaleido=0.1.0
+  - pip # use latest
+  - jupyter # use latest, only necessary for interactive use
   - pip:
-    - eurostat==0.2.1
-    - pandoc-include==0.8.4
+    - chromedriver-binary
+    - selenium==4.1.3
+

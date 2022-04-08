@@ -16,11 +16,18 @@ from pathlib import Path
 import math
 import numpy as np
 import pandas as pd
+import chromedriver_binary
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.expected_conditions import presence_of_element_located
+from selenium.webdriver.chrome.service import Service
+# selenium settings
+# atm not very portable because application dir is hard-coded (think of a way to determine app, app path, use webdriver for selenium drivers)
+options = webdriver.ChromeOptions()
+options.binary_location = '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser'
+options.add_experimental_option('prefs', {'intl.accept_languages': 'de-DE'})
 
 # working dir (Jupyter proof), add src to import search locations
 try:
@@ -47,16 +54,18 @@ Use Tripadvisor's restaurant site as database
 # city list (can be supplies via spreadsheet later)
 cities = ['Berlin']
 
+# start driver
+driver = webdriver.Chrome(options=options)
+
 # loop over cities
 for city in cities:
 
     ### search for city
-    driver = webdriver.Firefox()
-    wait = WebDriverWait(driver, 10)
+    wait = WebDriverWait(driver, 100)
     driver.get('https://www.tripadvisor.com/Restaurants')
     original_window = driver.current_window_handle
     # accept cookies
-    cookie_prompt = wait.until(presence_of_element_located((By.CSS_SELECTOR, '#_evidon-accept-button')))
+    cookie_prompt = wait.until(presence_of_element_located((By.CSS_SELECTOR, '#onetrust-accept-btn-handler')))
     cookie_prompt.click()
     # search city by city and open first result of suggestions
     form = driver.find_element(By.CSS_SELECTOR, 'div.restaurants_home form')
@@ -65,51 +74,31 @@ for city in cities:
     driver.get(url)
 
     ### check restaurant fit
-    '''
-    Not possible to avoid hard-coding gibberish class names from CSS modules in
-    all cases. Can be a problem when recompiled.
-    '''
-    res_list_item_class = driver.find_element(By.CSS_SELECTOR, '[data-test="1_list_item"]').get_attribute('class')
-    res_list = driver.find_elements(By.CSS_SELECTOR, '#EATERY_SEARCH_RESULTS div.' + res_list_item_class)
+    res_list = driver.find_element(By.CSS_SELECTOR, '#EATERY_SEARCH_RESULTS')
+    res_list = res_list.find_elements(by=By.XPATH, value='//div[contains(@data-test,"list_item")]')
     for res in res_list:
-        if ('German' not in res.find_element(By.CSS_SELECTOR, 'div._3d9EnJpt span.EHA742uW span._1p0FLy4t').text):
             ### go to restaurant page (let driver stay on results page in tab)
-            res_link = res.find_element(By.CSS_SELECTOR, 'a._15_ydu6b').get_attribute('href')
-            driver.switch_to.new_window('tab')
-            driver.get(res_link + '#REVIEWS')
-            try:
-                name = driver.find_element(By.CSS_SELECTOR, '[data-test-target="top-info-header"]').text
-                # select reviews in German
-                langbtn = wait.until(lambda d: d.find_element(By.CSS_SELECTOR, '#filters_detail_language_filterLang_de'))
-                langbtn.click()
-                # fetch all reviews on page
-                rev_list = driver.find_elements(By.CSS_SELECTOR, 'div.listContainer > div')
-                for r, rev in enumerate(rev_list):
-                    try:
-                        rating = rev.find_element(By.CSS_SELECTOR, 'span.ui_bubble_rating').get_attribute('class').replace('ui_bubble_rating bubble_','')
-                        print(name + ' ' + str(int(int(rating)/10)) + '/5')
-                    except:
-                        continue
-            except:
-                print("German not one of the main review languages")
-            finally:
-                driver.close()
-                driver.switch_to.window(original_window)
+            res_link = res.find_element(by=By.XPATH, value='//a[contains(@href,"Restaurant_Review")]').get_attribute('href')
+            #driver.switch_to.new_window('tab')
+            #driver.get(res_link + '#REVIEWS')
+            # try:
+            #     name = driver.find_element(By.CSS_SELECTOR, '[data-test-target="top-info-header"]').text
+            #     # select reviews in German
+            #     langbtn = wait.until(lambda d: d.find_element(By.CSS_SELECTOR, '#filters_detail_language_filterLang_de'))
+            #     langbtn.click()
+            #     # fetch all reviews on page
+            #     rev_list = driver.find_elements(By.CSS_SELECTOR, 'div.listContainer > div')
+            #     for r, rev in enumerate(rev_list):
+            #         try:
+            #             rating = rev.find_element(By.CSS_SELECTOR, 'span.ui_bubble_rating').get_attribute('class').replace('ui_bubble_rating bubble_','')
+            #             print(name + ' ' + str(int(int(rating)/10)) + '/5')
+            #         except:
+            #             continue
+            # except:
+            #     print("German is not one of the main review languages")
+            # finally:
+            #     driver.close()
+            #     driver.switch_to.window(original_window)
 
-
-# driver = webdriver.Firefox()
-# wait = WebDriverWait(driver, 10)
-# driver.get('https://www.tripadvisor.com/Restaurant_Review-g187323-d2456695-Reviews-Die_Eselin_von_A-Berlin.html')
-# # accept cookies
-# cookie_prompt = wait.until(presence_of_element_located((By.CSS_SELECTOR, '#_evidon-accept-button')))
-# cookie_prompt.click()
-# #
-# driver.find_element(By.CSS_SELECTOR, '#filters_detail_language_filterLang_de').click()
-# rev_list = driver.find_elements(By.CSS_SELECTOR, 'div.listContainer > div')
-# name = driver.find_element(By.CSS_SELECTOR, '[data-test-target="top-info-header"]').text
-# for r, rev in enumerate(rev_list):
-#     try:
-#         rating = rev.find_element(By.CSS_SELECTOR, 'span.ui_bubble_rating').get_attribute('class').replace('ui_bubble_rating bubble_','')
-#         print(name + ' ' + str(int(int(rating)/10)) + '/5')
-#     except:
-#         continue
+# think about whether exclusion rules makes sense beforehand
+# if ('German' not in res.find_element(By.CSS_SELECTOR, 'div._3d9EnJpt span.EHA742uW span._1p0FLy4t').text):
