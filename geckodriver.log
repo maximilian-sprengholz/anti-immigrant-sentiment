@@ -2138,3 +2138,149 @@ unwatchForTabs()@TargetList.jsm:70
 unwatchForTargets()@TargetList.jsm:37
 destructor()@TargetList.jsm:109
 close()@RemoteAgent.jsm:129
+1650554657730	geckodriver	INFO	Listening on 127.0.0.1:56206
+1650554923839	geckodriver	INFO	Listening on 127.0.0.1:56241
+1650554925886	mozrunner::runner	INFO	Running command: "C:\\Program Files\\Mozilla Firefox\\firefox.exe" "--marionette" "--remote-debugging-port" "56242" "--remote-allow-hosts" "localhost" "-no-remote" "-profile" "C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofile7vMGOJ"
+console.error: GPOParser.jsm: 
+  Unable to parse JSON for ExtensionSettings
+console.error: Enterprise Policies: 
+  Policy SearchEngines is only allowed on ESR
+1650554926756	Marionette	INFO	Marionette enabled
+console.error: Policies.jsm: 
+  OfferToSaveLoginsDefault ignored because OfferToSaveLogins is present.
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofile7vMGOJ\\search.json.mozlz4", (void 0)))
+DevTools listening on ws://localhost:56242/devtools/browser/a88f68b3-3d54-4d18-8ee7-c98285b65a7b
+1650554930022	Marionette	INFO	Listening on port 56272
+Read port: 56272
+1650554930085	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+1650554944311	Marionette	INFO	Stopped listening on port 56272
+console.warn: TopSitesFeed: Failed to fetch data from Contile server: NetworkError when attempting to fetch resource.
+1650555373385	geckodriver	INFO	Listening on 127.0.0.1:56360
+1650555375389	mozrunner::runner	INFO	Running command: "C:\\Users\\sprenmax\\Seafile\\Projects\\anti-immigrant-sentiment\\env\\Library\\bin\\firefox.exe" "--marionette" "--remote-debugging-port" "56361" "--remote-allow-hosts" "localhost" "-no-remote" "-profile" "C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofileq2xSfw"
+console.error: GPOParser.jsm: 
+  Unable to parse JSON for ExtensionSettings
+console.error: Enterprise Policies: 
+  Policy SearchEngines is only allowed on ESR
+1650555376726	Marionette	INFO	Marionette enabled
+console.error: Policies.jsm: 
+  OfferToSaveLoginsDefault ignored because OfferToSaveLogins is present.
+[GFX1-]: RcANGLE(no EXT_device_query support)
+[GFX1-]: Failed to connect WebRenderBridgeChild.
+[GFX1-]: Fallback WR to SW-WR + D3D11
+[Parent 14428, IPC I/O Parent] WARNING: Failed to launch tab subprocess: file /builds/worker/checkouts/gecko/ipc/glue/GeckoChildProcessHost.cpp:743
+[Parent 14428, IPC I/O Parent] WARNING: Failed to launch tab subprocess: file /builds/worker/checkouts/gecko/ipc/glue/GeckoChildProcessHost.cpp:743
+[Parent 14428, IPC I/O Parent] WARNING: Failed to launch tab subprocess: file /builds/worker/checkouts/gecko/ipc/glue/GeckoChildProcessHost.cpp:743
+[Parent 14428, IPC I/O Parent] WARNING: Failed to launch tab subprocess: file /builds/worker/checkouts/gecko/ipc/glue/GeckoChildProcessHost.cpp:743
+[Parent 14428, IPC I/O Parent] WARNING: Failed to launch tab subprocess: file /builds/worker/checkouts/gecko/ipc/glue/GeckoChildProcessHost.cpp:743
+JavaScript error: resource://gre/modules/ExtensionParent.jsm, line 1546: TypeError: messageManager is null
+JavaScript error: resource://gre/modules/ExtensionParent.jsm, line 1546: TypeError: messageManager is null
+JavaScript error: resource://gre/modules/ExtensionParent.jsm, line 1546: TypeError: messageManager is null
+JavaScript error: resource://gre/modules/ExtensionParent.jsm, line 1546: TypeError: messageManager is null
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofileq2xSfw\\search.json.mozlz4", (void 0)))
+[Parent 14428, IPC I/O Parent] WARNING: Failed to launch tab subprocess: file /builds/worker/checkouts/gecko/ipc/glue/GeckoChildProcessHost.cpp:743
+JavaScript error: resource://gre/modules/ExtensionParent.jsm, line 1546: TypeError: messageManager is null
+[Parent 14428, IPC I/O Parent] WARNING: Failed to launch tab subprocess: file /builds/worker/checkouts/gecko/ipc/glue/GeckoChildProcessHost.cpp:743
+DevTools listening on ws://localhost:56361/devtools/browser/951436e6-f7d6-4ed5-8761-1cdfadb714b2
+[Parent 14428, IPC I/O Parent] WARNING: Failed to launch tab subprocess: file /builds/worker/checkouts/gecko/ipc/glue/GeckoChildProcessHost.cpp:743
+JavaScript error: resource://gre/modules/ExtensionParent.jsm, line 1546: TypeError: messageManager is null
+1650555378748	Marionette	INFO	Listening on port 56385
+[Parent 14428, IPC I/O Parent] WARNING: Failed to launch tab subprocess: file /builds/worker/checkouts/gecko/ipc/glue/GeckoChildProcessHost.cpp:743
+Read port: 56385
+1650555378805	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+JavaScript error: chrome://remote/content/marionette/dom.js, line 50: TypeError: this.mm is null
+[Parent 14428, IPC I/O Parent] WARNING: Failed to launch tab subprocess: file /builds/worker/checkouts/gecko/ipc/glue/GeckoChildProcessHost.cpp:743
+JavaScript error: resource://gre/modules/ExtensionParent.jsm, line 1546: TypeError: messageManager is null
+[Parent 14428, IPC I/O Parent] WARNING: Failed to launch tab subprocess: file /builds/worker/checkouts/gecko/ipc/glue/GeckoChildProcessHost.cpp:743
+JavaScript error: resource://gre/modules/ExtensionParent.jsm, line 1546: TypeError: messageManager is null
+[Parent 14428, IPC I/O Parent] WARNING: Failed to launch tab subprocess: file /builds/worker/checkouts/gecko/ipc/glue/GeckoChildProcessHost.cpp:743
+[Parent 14428, IPC I/O Parent] WARNING: Failed to launch tab subprocess: file /builds/worker/checkouts/gecko/ipc/glue/GeckoChildProcessHost.cpp:743
+[Parent 14428, IPC I/O Parent] WARNING: Failed to launch tab subprocess: file /builds/worker/checkouts/gecko/ipc/glue/GeckoChildProcessHost.cpp:743
+[Parent 14428, IPC I/O Parent] WARNING: Failed to launch tab subprocess: file /builds/worker/checkouts/gecko/ipc/glue/GeckoChildProcessHost.cpp:743
+JavaScript error: resource:///modules/ExtensionPopups.jsm, line 371: TypeError: mm is null
+[Parent 14428, IPC I/O Parent] WARNING: Failed to launch tab subprocess: file /builds/worker/checkouts/gecko/ipc/glue/GeckoChildProcessHost.cpp:743
+JavaScript error: resource:///modules/ExtensionPopups.jsm, line 371: TypeError: mm is null
+JavaScript error: resource:///modules/ExtensionPopups.jsm, line 371: TypeError: mm is null
+JavaScript error: resource:///modules/ExtensionPopups.jsm, line 371: TypeError: mm is null
+JavaScript error: resource:///modules/sessionstore/TabStateFlusher.jsm, line 131: TypeError: mm is null
+1650555383638	Marionette	INFO	Stopped listening on port 56385
+console.warn: TopSitesFeed: Failed to fetch data from Contile server: NetworkError when attempting to fetch resource.
+1650555628164	geckodriver	INFO	Listening on 127.0.0.1:56511
+1650555630220	mozrunner::runner	INFO	Running command: "C:\\Program Files\\Mozilla Firefox\\firefox.exe" "--marionette" "--remote-debugging-port" "56512" "--remote-allow-hosts" "localhost" "-no-remote" "-profile" "C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofileyb7C7U"
+console.error: GPOParser.jsm: 
+  Unable to parse JSON for ExtensionSettings
+console.error: Enterprise Policies: 
+  Policy SearchEngines is only allowed on ESR
+1650555630616	Marionette	INFO	Marionette enabled
+console.error: Policies.jsm: 
+  OfferToSaveLoginsDefault ignored because OfferToSaveLogins is present.
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofileyb7C7U\\search.json.mozlz4", (void 0)))
+DevTools listening on ws://localhost:56512/devtools/browser/c4806ad4-b522-4651-b416-8d1d6b7ab391
+1650555633036	Marionette	INFO	Listening on port 56541
+Read port: 56541
+1650555633099	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+1650555678650	Marionette	INFO	Stopped listening on port 56541
+console.warn: TopSitesFeed: Failed to fetch data from Contile server: NetworkError when attempting to fetch resource.
+1650555796201	geckodriver	INFO	Listening on 127.0.0.1:56601
+1650555823255	geckodriver	INFO	Listening on 127.0.0.1:56609
+1650555825305	mozrunner::runner	INFO	Running command: "C:\\Users\\sprenmax\\Seafile\\Projects\\anti-immigrant-sentiment/env/Library/bin/firefox.exe" "--marionette" "--remote-debugging-port" "56610" "--remote-allow-hosts" "localhost" "-no-remote" "-profile" "C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofileVNed0X"
+console.error: GPOParser.jsm: 
+  Unable to parse JSON for ExtensionSettings
+console.error: Enterprise Policies: 
+  Policy SearchEngines is only allowed on ESR
+1650555825650	Marionette	INFO	Marionette enabled
+console.error: Policies.jsm: 
+  OfferToSaveLoginsDefault ignored because OfferToSaveLogins is present.
+[GFX1-]: RcANGLE(no EXT_device_query support)
+[GFX1-]: Failed to connect WebRenderBridgeChild.
+[GFX1-]: Fallback WR to SW-WR + D3D11
+[Parent 7152, IPC I/O Parent] WARNING: Failed to launch tab subprocess: file /builds/worker/checkouts/gecko/ipc/glue/GeckoChildProcessHost.cpp:743
+[Parent 7152, IPC I/O Parent] WARNING: Failed to launch tab subprocess: file /builds/worker/checkouts/gecko/ipc/glue/GeckoChildProcessHost.cpp:743
+[Parent 7152, IPC I/O Parent] WARNING: Failed to launch tab subprocess: file /builds/worker/checkouts/gecko/ipc/glue/GeckoChildProcessHost.cpp:743
+[Parent 7152, IPC I/O Parent] WARNING: Failed to launch tab subprocess: file /builds/worker/checkouts/gecko/ipc/glue/GeckoChildProcessHost.cpp:743
+[Parent 7152, IPC I/O Parent] WARNING: Failed to launch tab subprocess: file /builds/worker/checkouts/gecko/ipc/glue/GeckoChildProcessHost.cpp:743
+JavaScript error: resource://gre/modules/ExtensionParent.jsm, line 1546: TypeError: messageManager is null
+JavaScript error: resource://gre/modules/ExtensionParent.jsm, line 1546: TypeError: messageManager is null
+JavaScript error: resource://gre/modules/ExtensionParent.jsm, line 1546: TypeError: messageManager is null
+JavaScript error: resource://gre/modules/ExtensionParent.jsm, line 1546: TypeError: messageManager is null
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofileVNed0X\\search.json.mozlz4", (void 0)))
+[Parent 7152, IPC I/O Parent] WARNING: Failed to launch tab subprocess: file /builds/worker/checkouts/gecko/ipc/glue/GeckoChildProcessHost.cpp:743
+JavaScript error: resource://gre/modules/ExtensionParent.jsm, line 1546: TypeError: messageManager is null
+[Parent 7152, IPC I/O Parent] WARNING: Failed to launch tab subprocess: file /builds/worker/checkouts/gecko/ipc/glue/GeckoChildProcessHost.cpp:743
+[Parent 7152, IPC I/O Parent] WARNING: Failed to launch tab subprocess: file /builds/worker/checkouts/gecko/ipc/glue/GeckoChildProcessHost.cpp:743
+DevTools listening on ws://localhost:56610/devtools/browser/b4bb3bcd-2113-47a3-8959-911e6b0250b8
+[Parent 7152, IPC I/O Parent] WARNING: Failed to launch tab subprocess: file /builds/worker/checkouts/gecko/ipc/glue/GeckoChildProcessHost.cpp:743
+JavaScript error: resource://gre/modules/ExtensionParent.jsm, line 1546: TypeError: messageManager is null
+1650555827573	Marionette	INFO	Listening on port 56633
+Read port: 56633
+[Parent 7152, IPC I/O Parent] WARNING: Failed to launch tab subprocess: file /builds/worker/checkouts/gecko/ipc/glue/GeckoChildProcessHost.cpp:743
+1650555827615	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+JavaScript error: chrome://remote/content/marionette/dom.js, line 50: TypeError: this.mm is null
+[Parent 7152, IPC I/O Parent] WARNING: Failed to launch tab subprocess: file /builds/worker/checkouts/gecko/ipc/glue/GeckoChildProcessHost.cpp:743
+JavaScript error: resource://gre/modules/ExtensionParent.jsm, line 1546: TypeError: messageManager is null
+[Parent 7152, IPC I/O Parent] WARNING: Failed to launch tab subprocess: file /builds/worker/checkouts/gecko/ipc/glue/GeckoChildProcessHost.cpp:743
+JavaScript error: resource://gre/modules/ExtensionParent.jsm, line 1546: TypeError: messageManager is null
+[Parent 7152, IPC I/O Parent] WARNING: Failed to launch tab subprocess: file /builds/worker/checkouts/gecko/ipc/glue/GeckoChildProcessHost.cpp:743
+[Parent 7152, IPC I/O Parent] WARNING: Failed to launch tab subprocess: file /builds/worker/checkouts/gecko/ipc/glue/GeckoChildProcessHost.cpp:743
+[Parent 7152, IPC I/O Parent] WARNING: Failed to launch tab subprocess: file /builds/worker/checkouts/gecko/ipc/glue/GeckoChildProcessHost.cpp:743
+JavaScript error: resource:///modules/sessionstore/TabStateFlusher.jsm, line 131: TypeError: mm is null
+1650555870237	Marionette	INFO	Stopped listening on port 56633
+console.warn: TopSitesFeed: Failed to fetch data from Contile server: NetworkError when attempting to fetch resource.
+
+###!!! [Parent][PGPUParent] Error: RunMessage(msgname=PGPU::Msg_ShutdownVR) Channel closing: too late to send/recv, messages will be lost
+
+1650555878322	geckodriver	INFO	Listening on 127.0.0.1:56679
+1650555880360	mozrunner::runner	INFO	Running command: "C:\\Program Files\\Mozilla Firefox\\firefox.exe" "--marionette" "--remote-debugging-port" "56680" "--remote-allow-hosts" "localhost" "-no-remote" "-profile" "C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofilenKri89"
+console.error: GPOParser.jsm: 
+  Unable to parse JSON for ExtensionSettings
+console.error: Enterprise Policies: 
+  Policy SearchEngines is only allowed on ESR
+1650555880681	Marionette	INFO	Marionette enabled
+console.error: Policies.jsm: 
+  OfferToSaveLoginsDefault ignored because OfferToSaveLogins is present.
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofilenKri89\\search.json.mozlz4", (void 0)))
+DevTools listening on ws://localhost:56680/devtools/browser/3b8c84bc-7c2a-47fe-b178-a0407790b707
+1650555882942	Marionette	INFO	Listening on port 56707
+Read port: 56707
+1650555883049	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+1650555889259	Marionette	INFO	Stopped listening on port 56707
+console.warn: TopSitesFeed: Failed to fetch data from Contile server: NetworkError when attempting to fetch resource.

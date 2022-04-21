@@ -4,13 +4,13 @@ channels:
   - defaults
 dependencies:
   - python=3.8
+  - jupyter # use latest, only necessary for interactive use
   - beautifulsoup4=4.9.*
   - matplotlib=3.3.*
   - numpy=1.19.*
   - pandas=1.2.*
+  - firefox=99.0.*
   - pip # use latest
-  - jupyter # use latest, only necessary for interactive use
   - pip:
-    - chromedriver-binary
+    - webdriver-manager==3.5.4
     - selenium==4.1.3
-
