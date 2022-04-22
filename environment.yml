@@ -4,7 +4,8 @@ channels:
   - defaults
 dependencies:
   - python=3.8
-  - jupyter # use latest, only necessary for interactive use
+  - jupyter # use latest, for interactive use
+  - pylint # use latest, for interactive use
   - beautifulsoup4=4.9.*
   - matplotlib=3.3.*
   - numpy=1.19.*

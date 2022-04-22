@@ -42,17 +42,15 @@ options = webdriver.FirefoxOptions()
 Steps:
 ------
 
-Use Tripadvisor's restaurant site as database
- └─ Loop over all defined cities
-     └─ Loop over all restaurants within city (via pagination)
-         └─ Select all tagged as non-German cuisine
-             └─ Select subset with reviews in 2013
+Use Google Maps as database
+ └─ Loop over all postcodes
+     └─ Loop over all restaurants per postcode
                  └─ Extract information on restaurant and reviews
 
 '''
 
 # city list (can be supplied via spreadsheet later)
-cities = ['Berlin']
+postcodes = [10439]
 
 # start driver
 driver = webdriver.Firefox(service=Service(GeckoDriverManager().install()), options=options)
