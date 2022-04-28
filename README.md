@@ -4,6 +4,15 @@ _Version 0.1.0_
 
 We measure anti-immigrant sentiment in Germany expressed in online reviews of immigrant establishments before and after the large-scale refugee influx in 2015.
 
+## Current Status
+
+__Tripadvisor (restaurants)__:
+- [ ] Crawler written: basic funtionality works
+- [ ] Crawler running: {when running, a counter will be dynamically updated 'x/X cities scraped'}
+
+__Google Maps (restaurants, places of worship, grocery stores)__:
+- [ ] Crawler written:
+- [ ] Crawler running:
 
 ## Project organization
 
