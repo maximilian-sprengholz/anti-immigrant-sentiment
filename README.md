@@ -42,6 +42,9 @@ conda env create --prefix ./env --file environment.yml
 conda activate ./env
 # check if environment is active and python is in it
 make checksetup
+# start crawler
+make crawl_tripadvisor
+make crawl_googlemaps
 # run analysis and make docs
 make all
 ```
