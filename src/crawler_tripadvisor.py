@@ -2,8 +2,8 @@
 
 '''
 
-This file scrapes Tripadvisor review information for restaurants in German
-cities.
+This file scrapes Tripadvisor review information 
+for restaurants in German cities.
 
 '''
 
@@ -26,6 +26,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.firefox.service import Service
 from webdriver_manager.firefox import GeckoDriverManager
 
@@ -43,19 +44,8 @@ options.set_preference('intl.accept_languages', 'de-DE, de')
 #options.headless = True
 #options.binary_location = wd + 'env/Library/bin/firefox.exe' # activate when sharing code, does not work with group policy
 
-'''
 
-Steps:
-------
-
-Use Tripadvisor's restaurant site as database
- └─ Loop over all defined cities
-     └─ Loop over all restaurants within city (via pagination)
-                 └─ Extract information on restaurant and reviews
-
-Extract everything and subset later (non-German cuisine, reviews 2014-2016,...)
-
-'''
+### DRIVER / FUNCTIONS ###
 
 # start driver
 driver = webdriver.Firefox(service=Service(GeckoDriverManager().install()), options=options)
@@ -72,13 +62,63 @@ def accept_cookies():
     except TimeoutException:
         pass
 
-def get_languages():
+def close_overlays(element=driver):
+    # in some cases triggered overlays do not close
+    # this function checks if one is open (=closing x exists) and attempts another close
+    try:
+        xs = element.find_elements(By.CSS_SELECTOR, 'div.ui_close_x')
+        for x in xs:
+            driver.execute_script('arguments[0].click();', x)
+    except (NoSuchElementException, StaleElementReferenceException):
+        pass
+
+def expand_teaser_text():
+    # expand automatically trimmed text (find and click first occurence of 'mehr anzeigen', applies to all elements on page)
+    try:
+        driver.execute_script('arguments[0].click();', driver.find_element(by=By.XPATH, value='.//p[contains(@class, "partial_entry")]/span[contains(@onclick,"clickExpand")]'))
+    except NoSuchElementException:
+        pass
+
+def switch_to_next_page(page):  
+    # try to switch to next page, break if no possible
+    try:
+        pagelink = driver.find_element(by=By.XPATH, value='.//div[contains(@class, "pageNumbers")]/a[contains(@data-page-number,"' + str(page+1) + '")]')
+        driver.execute_script('arguments[0].click();', pagelink)
+        sleep(2)
+        return True
+    except NoSuchElementException:
+        return False
+
+def search_for_city(query):
+    # search for city, open first result of suggestions
+    query = query + ' Deutschland'
+    form = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.restaurants_home form')))
+    form.find_element(By.NAME, 'q').send_keys(query)
+    wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'input[value="' + query + '"]'))) # wait until full input processed
+    driver.get(wait.until(lambda d: d.find_element(By.CSS_SELECTOR, 'div#typeahead_results > a').get_attribute('href'))) # wait until suggestions show
+
+def get_restaurant_info_from_results_page(data_dict):
+    res_list = wait.until(EC.visibility_of_element_located((By.XPATH, './/div[contains(@data-test-target,"restaurants-list")]')))
+    res_list = res_list.find_elements(by=By.XPATH, value='.//div[contains(@data-test,"list_item")]')
+    for res in res_list:
+        # check if reviews exist here (otherwise do not bother to save)
+        try:
+            res.find_element(by=By.XPATH, value='.//a[contains(@href, "#REVIEWS")]')
+            link = res.find_element(by=By.XPATH, value='(.//a[contains(@href,"Restaurant_Review")])[2]')
+            data_dict['name'].append(re.sub(r'[0-9]+\.\s', '', link.text))
+            data_dict['url'].append(link.get_attribute('href'))
+            data_dict['timestamp'].append(datetime.now().strftime('%Y-%m-%d, %H:%M:%S'))
+        except NoSuchElementException:
+            print('Skipped')
+            continue
+
+def get_review_languages():
     try:
         languagepicker = driver.find_element(by=By.XPATH, value='.//div[span[contains(text(),"Weitere Sprachen")]]')
         driver.execute_script('arguments[0].click();', languagepicker)
         languages = driver.find_elements(By.CSS_SELECTOR, 'div.ui_overlay.prw_filters_detail_language div.item')
         inputtype = 'overlay'
-        driver.execute_script('arguments[0].click();', driver.find_element(By.CSS_SELECTOR, 'div.ui_overlay.prw_filters_detail_language div.ui_close_x')) # close overlay
+        close_overlays()
         sleep(0.5)
     except NoSuchElementException:
         # if no language dropdown, use list of radio buttons
@@ -86,10 +126,10 @@ def get_languages():
         inputtype = 'radio'
     finally:
         lang_count = len(languages)
-        print('languages fetched')
         return(inputtype, lang_count) # passing the language picker leads to stale reference upon page change --> fetch in set_language
 
-def set_language(inputtype, langno):      
+def set_review_language(inputtype, langno):
+    close_overlays()      
     if (inputtype == 'overlay'):
         languagepicker = driver.find_element(by=By.XPATH, value='.//div[span[contains(text(),"Weitere Sprachen")]]')
         driver.execute_script('arguments[0].click();', languagepicker) # make overlay show again
@@ -99,13 +139,13 @@ def set_language(inputtype, langno):
     language = languages[langno].get_attribute('data-value') # language name
     # set if not already active
     if (languages[langno].find_element(By.CSS_SELECTOR, 'input').get_attribute('checked') == 'true'):
-        driver.execute_script('arguments[0].click();', driver.find_element(By.CSS_SELECTOR, 'div.ui_overlay.prw_filters_detail_language div.ui_close_x')) # close overlay
+        close_overlays()
     else:
         driver.execute_script('arguments[0].click();', languages[langno].find_element(By.CSS_SELECTOR, 'input'))
     sleep(0.5)
     return(language)
 
-def fetch_attributes(element, attr, fallback):
+def fetch_data_attribute(element, attr, fallback):
     # fetch attributes in try/except setting
     # pass element (container which is searched) and attribute fetching/processing rules
     try:
@@ -113,33 +153,45 @@ def fetch_attributes(element, attr, fallback):
         if (attr == 'name'):
             value = element.find_element(By.CSS_SELECTOR, '[data-test-target="top-info-header"]').text
         elif (attr == 'street_w_no'):
-            value = element.find_element(by=By.XPATH, value='.//a[contains(@href,"#MAPVIEW")]').text.split(", ", 1)
+            value = element.find_element(by=By.XPATH, value='.//a[contains(@href,"#MAPVIEW")]').text.split(', ', 1)
             value = value[0]
         elif (attr == 'postcode'):
-            value = element.find_element(by=By.XPATH, value='.//a[contains(@href,"#MAPVIEW")]').text.split(", ", 1)
+            value = element.find_element(by=By.XPATH, value='.//a[contains(@href,"#MAPVIEW")]').text.split(', ', 1)
             value = int(re.sub(r'[^\d]+', '', value[1])) # keep only postcode, delete city/country info
         elif (attr == 'city'):
             value = c # provided via list over which we loop
         elif (attr == 'cuisine1'):
-            value = element.find_element(by=By.XPATH, value='.//div[contains(text(), "KÜCHEN")]/following-sibling::div').text.split(", ", 3)
+            value = element.find_element(by=By.XPATH, value='.//div[contains(text(), "KÜCHEN")]/following-sibling::div').text.split(', ', 3)
             value = value[0]
         elif (attr == 'cuisine2'):
-            value = element.find_element(by=By.XPATH, value='.//div[contains(text(), "KÜCHEN")]/following-sibling::div').text.split(", ", 3)
+            value = element.find_element(by=By.XPATH, value='.//div[contains(text(), "KÜCHEN")]/following-sibling::div').text.split(', ', 3)
             value = value[1]
         elif (attr == 'cuisine3'):
-            value = element.find_element(by=By.XPATH, value='.//div[contains(text(), "KÜCHEN")]/following-sibling::div').text.split(", ", 3)
+            value = element.find_element(by=By.XPATH, value='.//div[contains(text(), "KÜCHEN")]/following-sibling::div').text.split(', ', 3)
             value = value[2]
         elif (attr == 'pricerange_lo'):
-            value = element.find_element(by=By.XPATH, value='.//div[contains(text(), "PREISSPANNE")]/following-sibling::div').text.split(" - ", 1)
+            value = element.find_element(by=By.XPATH, value='.//div[contains(text(), "PREISSPANNE")]/following-sibling::div').text.split(' - ', 1)
             value = int(re.sub(r'[^\d]+', '', value[0]))
         elif (attr == 'pricerange_hi'):
-            value = element.find_element(by=By.XPATH, value='.//div[contains(text(), "PREISSPANNE")]/following-sibling::div').text.split(" - ", 1)
+            value = element.find_element(by=By.XPATH, value='.//div[contains(text(), "PREISSPANNE")]/following-sibling::div').text.split(' - ', 1)
             value = int(re.sub(r'[^\d]+', '', value[1]))
         elif (attr == 'review_user_name'):
             if (fallback==0):
                 value = element.find_element(By.CSS_SELECTOR, 'h3.username').text
             else:
                 value = element.find_element(by=By.XPATH, value='.//div[contains(@class, "member_info")]/div[@class, "info_text")]/div').text
+        elif (attr == 'review_user_city'):
+            if (fallback==0):
+                value = element.find_element(by=By.XPATH, value='(.//ul[contains(@class, "memberdescriptionReviewEnhancements")]/li)[2]').text.split(', ', 1)
+                value = value[0].replace('Aus ','')
+            else:
+                value = np.nan
+        elif (attr == 'review_user_country'):
+            if (fallback==0):
+                value = element.find_element(by=By.XPATH, value='(.//ul[contains(@class, "memberdescriptionReviewEnhancements")]/li)[2]').text.split(', ', 1)
+                value = value[1]
+            else:
+                value = np.nan
         elif (attr == 'review_user_signup'):
             if (fallback==0):
                 value = element.find_element(by=By.XPATH, value='.//li[contains(text(), "Tripadvisor-Mitglied seit")]').text
@@ -165,6 +217,10 @@ def fetch_attributes(element, attr, fallback):
                 value = int(re.sub(r'[^\d]+', '', value))
             else:
                 value=np.nan
+        elif (attr == 'review_user_id'):
+            value = element.find_element(By.CSS_SELECTOR, 'div.memberOverlayLink.clickable').get_attribute('id').split('-', 1)
+            value = value[0].split("_", 1)
+            value = value[1]
         elif (attr == 'review_date'):
             value = element.find_element(By.CSS_SELECTOR, 'span.ratingDate').get_attribute('title') # use German format, clean afterwards
         elif (attr == 'review_score'):
@@ -179,207 +235,215 @@ def fetch_attributes(element, attr, fallback):
     except Exception:
         value = np.nan
     finally:
-        return(value)
+        return(value)  
 
-# city list (can be supplied via spreadsheet later)
-cities = ['Berlin']
 
-# loop over cities
-for c in cities:
+### (1) RESTAURANT LIST ###
+'''
+ Fetch all restaurants per city, save:
+ - names
+ - urls (direct links)
+ - timestamp
+'''
+cities = ['Itzehoe'] # provide via csv
 
-    print('-----')
-    print('Scraper initiated for ' + c)
+for c, city in enumerate(cities):
+
+    print('')
+    print('Scraping Tripadvisor restaurant database')
+    #print(city + ':' + x + 'Restaurants')
 
     # get restaurant page
     driver.get('https://www.tripadvisor.de/Restaurants')
-    original_window = driver.current_window_handle
     accept_cookies()
+
+    # search for city
+    search_for_city(city)
     
-    # search for city, open first result of suggestions
-    query = c + ' Deutschland'
-    form = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.restaurants_home form')))
-    form.find_element(By.NAME, 'q').send_keys(query)
-    wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'input[value="' + query + '"]'))) # wait until full input processed
-    driver.get(wait.until(lambda d: d.find_element(By.CSS_SELECTOR, 'div#typeahead_results > a').get_attribute('href'))) # wait until suggestions show
-
-    # loop over list of restaurants displayed (=30)
-    res_list = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, '#EATERY_SEARCH_RESULTS')))
-    res_list = res_list.find_elements(by=By.XPATH, value='.//div[contains(@data-test,"list_item")]')
-    res_count = 0
-    #
-    # Save link to restaurant, think of a way to restart the scraping for restaurants where errors occured (which level? review ID too?)
-    #
-    for res in res_list:
-            
-        sleep(3)
-        
-        ### go to restaurant page (let driver stay on results page in tab)
-        res_link = res.find_element(by=By.XPATH, value='.//a[contains(@href,"Restaurant_Review")]').get_attribute('href')
-        res_link = 'https://www.tripadvisor.de/Restaurant_Review-g187323-d19821000-Reviews-Ama_Cafe-Berlin.html'
-        driver.switch_to.new_window('tab')
-        driver.get(res_link + '#REVIEWS')
-        accept_cookies()
-
-        # check if reviews exist (skip if not)
-        try:
-            driver.find_element(By.CSS_SELECTOR, 'div#REVIEWS span.reviews_header_count')
-            res_count = res_count + 1 # counter for results from which we scrape info
-            rev_count = 0 # counter for reviews for each result
-            sys.stdout.write('\n')
-            print('(' + str(res_count) + ') ' + driver.find_element(By.CSS_SELECTOR, '[data-test-target="top-info-header"]').text)
-        except NoSuchElementException:
-            driver.close()
-            driver.switch_to.window(original_window)
-            continue
-
-        # dict to be filled for each restaurant
-        data = {
-            'name': [],
-            'url': [],
-            'street_w_no': [],
-            'postcode': [],
-            'city': [],
-            'cuisine1': [],
-            'cuisine2': [],
-            'cuisine3': [],
-            'pricerange_lo': [],
-            'pricerange_hi': [],
-            'review_user_name': [],
-            'review_user_signup': [],
-            'review_user_reviews': [],
-            'review_user_thumbsup': [],
-            'review_user_cities_visited': [],
-            'review_user_overlay_failed': [],
-            'review_date': [],
-            'review_score': [],
-            'review_title': [],
-            'review_text': [],
-            'review_language': [],
-            'review_id': [],
-            'timestamp': [],
-        }
-
-        # get restaurant general info
-        attributes_restaurant = [
-            'name',
-            'url',
-            'street_w_no',
-            'postcode',
-            'city',
-            'cuisine1',
-            'cuisine2',
-            'cuisine3',
-            'pricerange_lo',
-            'pricerange_hi'
-        ]
-        for attr in attributes_restaurant:
-            if (attr != 'url'):
-                data[attr].append(fetch_attributes(element=driver, attr=attr, fallback=0))
-            else:
-                data[attr].append(res_link)
-
-        ### get reviews and review related info
-        '''
-        Steps:
-        ------
-        Get list of languages in which reviews exist
-         └─ loop over languages (save language as field)
-             └─ loop over review pages
-                 └─ loop over reviews (expand text, extract numeric evaluation from dots)
-        '''
-
-        # (1) review language selection
-        inputtype, lang_count = get_languages()
-        for l in range(1, lang_count):
-            
-            language = set_language(inputtype=inputtype, langno=l) 
-            sleep(2) # can this be made less rigid by waiting on a particular element?
-            
-            # (2) pagination: try and except approach
-            for i in range(1,5):
-                if (i>1):
-                    try:
-                        pagelink = driver.find_element(by=By.XPATH, value='.//div[contains(@class, "pageNumbers")]/a[contains(@data-page-number,"' + str(i) + '")]')
-                        driver.execute_script('arguments[0].click();', pagelink)
-                    except NoSuchElementException:
-                        break # no more pages              
-                # select 'mehr anzeigen' once (find first occurence, applies to all reviews on page)
-                try:
-                    showmore = driver.find_element(by=By.XPATH, value='.//p[contains(@class, "partial_entry")]/span[contains(@onclick,"clickExpand")]')
-                    driver.execute_script('arguments[0].click();', showmore)
-                except NoSuchElementException:
-                    pass
-                finally:
-                    ### extract review info
-                    # fetch all reviews on page
-                    rev_list = driver.find_elements(By.CSS_SELECTOR, 'div.listContainer div.review-container')
-                    for rev in rev_list:
-                        # scroll into view
-                        driver.execute_script('arguments[0].scrollIntoView();', rev)
-                        # continue loop if review translated (then only fetch original)
-                        translated = rev.find_element(By.CSS_SELECTOR, 'div.quote span.noQuotes')
-                        if (str(translated.get_attribute('lang')) != ''):
-                            continue
-                        else:
-                            # count
-                            rev_count = rev_count + 1
-                            # user / review info
-                            attributes_user = [
-                                'review_user_name', 
-                                'review_user_signup', 
-                                'review_user_reviews', 
-                                'review_user_thumbsup', 
-                                'review_user_cities_visited' 
-                            ]
-                            attributes_review = [
-                                'review_date',
-                                'review_score', 
-                                'review_title', 
-                                'review_text',
-                                'review_id'
-                            ]
-                            # fetch
-                            try:
-                                # try to get user info overlay
-                                driver.execute_script('arguments[0].click();', rev.find_element(By.CSS_SELECTOR, 'div.memberOverlayLink.clickable'))
-                                wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span.ui_popover div.memberOverlay h3.username'))) # wait until overlay content visible
-                                overlay = driver.find_element(By.CSS_SELECTOR, 'span.ui_popover div.memberOverlay')
-                                fallback = 0
-                                for attr in attributes_user:
-                                    data[attr].append(fetch_attributes(element=overlay, attr=attr, fallback=fallback))
-                                sleep(1)
-                                driver.execute_script('arguments[0].click();', driver.find_element(By.CSS_SELECTOR, 'span.ui_popover div.ui_close_x')) # close overlay
-                                sleep(1)
-                            except TimeoutException:
-                                # if user overlay fails, get use info set already visible
-                                fallback = 1
-                                for attr in attributes_user:
-                                    data[attr].append(fetch_attributes(element=rev, attr=attr, fallback=fallback))
-                            finally:
-                                data['review_user_overlay_failed'].append(fallback)
-                                # get review info
-                                for attr in attributes_review:
-                                    data[attr].append(fetch_attributes(element=rev, attr=attr, fallback=0))
-                                data['review_language'].append(language)
-                                # append current timestamp
-                                data['timestamp'].append(datetime.now().strftime('%Y-%m-%d, %H:%M:%S'))
-                                # print status
-                                sys.stdout.write('\r └─ Review languages %i, total reviews %i' % (l, rev_count))
-                                sys.stdout.flush()
-        
-        # save dataframe per restaurant
-        for attr in attributes_restaurant: 
-            data[attr] = data[attr]*rev_count # expand fixed restaurant info
-        df = pd.DataFrame.from_dict(data)
-        print(df)
-
-        # close driver and switch to city restaurant results window
-        driver.close()
-        driver.switch_to.window(original_window)
+    # loop over pages of restaurants displayed (assume a maximum of 1000 pages, each with 30 results)
+    data = {
+        'name': [],
+        'url': [],
+        'timestamp': []
+    }
+    for page in range(1,1000):
+        # fetch and save result info from page
+        get_restaurant_info_from_results_page(data)
+        # switch to next page until depleted
+        if (switch_to_next_page(page) is False):
+            break
     
-    # combine all restaurant datasets per city
+    # create dataframe, drop duplicates, save CSV
+    df = pd.DataFrame.from_dict(data)
+    df = df.drop_duplicates()
+    df.to_csv('file1.csv', index=False) # NAMING SCHEME?
+    print('(' + c + ') ' + city + ': ' + len(df) + 'restaurants saved in scraping list.')
 
 
-    # city loop close
-    print('Fetched info for ' + str(res_count) + ' Restaurants in ' + c + '.')
-    driver.close()
+# def check_inclusion_criteria ():
+# # REWRITE SO THAT THIS IS ALREADY CHECKED WHEN RESTAURANT LIST IS SCRAPED!
+# # check if reviews exist (skip restaurant if not)
+# try:
+#     driver.find_element(By.CSS_SELECTOR, 'div#REVIEWS span.reviews_header_count')
+#     res_count = res_count + 1 # counter for results from which we scrape info
+#     rev_count = 0 # counter for reviews for each result
+#     sys.stdout.write('\n')
+#     print('(' + str(res_count) + ') ' + driver.find_element(By.CSS_SELECTOR, '[data-test-target="top-info-header"]').text)
+# except NoSuchElementException:
+#     # think of a way to exclude from saved restaurant list?
+#     continue
+
+
+
+# for res in res_list:
+        
+#     sleep(3)
+    
+#     ### go to restaurant page
+#     res_link = 'https://www.tripadvisor.de/Restaurant_Review-g187323-d19821000-Reviews-Ama_Cafe-Berlin.html'
+#     driver.get(res_link + '#REVIEWS')
+#     accept_cookies()
+
+#     # dict to be filled for each restaurant
+#     data = {
+#         'name': [],
+#         'url': [],
+#         'street_w_no': [],
+#         'postcode': [],
+#         'city': [],
+#         'cuisine1': [],
+#         'cuisine2': [],
+#         'cuisine3': [],
+#         'pricerange_lo': [],
+#         'pricerange_hi': [],
+#         'review_user_name': [],
+#         'review_user_city': [],
+#         'review_user_country': [],
+#         'review_user_signup': [],
+#         'review_user_reviews': [],
+#         'review_user_thumbsup': [],
+#         'review_user_cities_visited': [],
+#         'review_user_overlay_failed': [],
+#         'review_user_id': [],
+#         'review_date': [],
+#         'review_score': [],
+#         'review_title': [],
+#         'review_text': [],
+#         'review_language': [],
+#         'review_id': [],
+#         'timestamp': [],
+#     }
+
+#     # get restaurant general info
+#     attributes_restaurant = [
+#         'name',
+#         'url',
+#         'street_w_no',
+#         'postcode',
+#         'city',
+#         'cuisine1',
+#         'cuisine2',
+#         'cuisine3',
+#         'pricerange_lo',
+#         'pricerange_hi'
+#     ]
+#     for attr in attributes_restaurant:
+#         if (attr != 'url'):
+#             data[attr].append(fetch_data_attribute(element=driver, attr=attr, fallback=0))
+#         else:
+#             data[attr].append(res_link)
+
+#     ### get reviews and review related info
+
+#     # (1) review language selection
+#     inputtype, lang_count = get_review_languages()
+#     for l in range(1, lang_count):
+        
+#         language = set_review_language(inputtype=inputtype, langno=l) 
+#         sleep(2)
+        
+#         # (2) extract review info (loop over pages)
+#         unscrapedpages = True # as long as there are further pages, continue                
+#         while unscrapedpages is True: 
+#         expand_teaser_text()
+#         # fetch all reviews on page
+#         rev_list = driver.find_elements(By.CSS_SELECTOR, 'div.listContainer div.review-container')
+#         for rev in rev_list:
+#             # scroll into view
+#             driver.execute_script('arguments[0].scrollIntoView();', rev)
+#             # continue loop if review translated (then only fetch original)
+#             translated = rev.find_element(By.CSS_SELECTOR, 'div.quote span.noQuotes')
+#             if (str(translated.get_attribute('lang')) != ''):
+#                 continue
+#             else:
+#                 # count
+#                 rev_count = rev_count + 1
+#                 # user / review info
+#                 attributes_user_overlay = [
+#                     'review_user_name',
+#                     'review_user_city',
+#                     'review_user_country', 
+#                     'review_user_signup', 
+#                     'review_user_reviews', 
+#                     'review_user_thumbsup', 
+#                     'review_user_cities_visited' 
+#                 ]
+#                 attributes_review = [
+#                     'review_user_id',
+#                     'review_date',
+#                     'review_score', 
+#                     'review_title', 
+#                     'review_text',
+#                     'review_id'
+#                 ]
+#                 # fetch
+#                 try:
+#                     # try to get user info overlay
+#                     close_overlays()
+#                     sleep(0.5) # allow DOM to adjust
+#                     driver.execute_script('arguments[0].click();', rev.find_element(By.CSS_SELECTOR, 'div.memberOverlayLink.clickable'))
+#                     wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span.ui_popover div.memberOverlay h3.username'))) # wait until overlay content visible
+#                     overlay = driver.find_element(By.CSS_SELECTOR, 'span.ui_popover div.memberOverlay')
+#                     fallback = 0
+#                     for attr in attributes_user_overlay:
+#                         data[attr].append(fetch_data_attribute(element=overlay, attr=attr, fallback=fallback))
+#                     close_overlays() 
+#                 except TimeoutException:
+#                     # if user overlay fails, get user info set already visible
+#                     fallback = 1
+#                     for attr in attributes_user_overlay:
+#                         data[attr].append(fetch_data_attribute(element=rev, attr=attr, fallback=fallback))
+#                 finally:
+#                     data['review_user_overlay_failed'].append(fallback)
+#                     # get review info
+#                     for attr in attributes_review:
+#                         data[attr].append(fetch_data_attribute(element=rev, attr=attr, fallback=0))
+#                     data['review_language'].append(language)
+#                     # append current timestamp
+#                     data['timestamp'].append(datetime.now().strftime('%Y-%m-%d, %H:%M:%S'))
+#                     # print status
+#                     sys.stdout.write('\r └─ Review languages %i, total reviews %i' % (l, rev_count))
+#                     sys.stdout.flush()
+#         if (i>1):
+#                 try:
+#                     pagelink = driver.find_element(by=By.XPATH, value='.//div[contains(@class, "pageNumbers")]/a[contains(@data-page-number,"' + str(i) + '")]')
+#                     driver.execute_script('arguments[0].click();', pagelink)
+#                 except NoSuchElementException:
+#                     break # no more pages
+    
+#     # save dataframe per restaurant
+#     for attr in attributes_restaurant: 
+#         data[attr] = data[attr]*rev_count # expand fixed restaurant info
+#     df = pd.DataFrame.from_dict(data)
+#     print(df[['review_user_name','review_user_signup','review_id', 'review_user_overlay_failed']])
+
+#     # close driver and switch to city restaurant results window
+#     driver.close()
+#     driver.switch_to.window(original_window)
+
+# # combine all restaurant datasets per city
+
+
+# # city loop close
+# print('Fetched info for ' + str(res_count) + ' Restaurants in ' + c + '.')
+# driver.close()
