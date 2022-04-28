@@ -1,4 +1,5 @@
 # exclude data from source control by default
+.vscode
 /env
 /data/temp
 /data/processed
