@@ -35,36 +35,43 @@ try:
     wd = str(Path(__file__).parents[1].absolute()) + '/'
 except NameError:
     wd = str(Path().absolute()) + '/'
-    print('You seem to be using a Jupyter environment. Make sure this points to the repository root: ' + wd)
+    print('You seem to be using a Jupyter environment.' 
+          'Make sure this points to the repository root: ' 
+          + wd)
 sys.path.append(wd + 'src')
 
 # selenium options
 options = webdriver.FirefoxOptions()
 options.set_preference('intl.accept_languages', 'de-DE, de')
 #options.headless = True
-#options.binary_location = wd + 'env/Library/bin/firefox.exe' # activate when sharing code, does not work with group policy
+#options.binary_location = wd + 'env/Library/bin/firefox.exe' # activate
 
 
 ### DRIVER / FUNCTIONS ###
 
 # start driver
-driver = webdriver.Firefox(service=Service(GeckoDriverManager().install()), options=options)
+driver = webdriver.Firefox(
+    service=Service(GeckoDriverManager().install()), 
+    options=options
+    )
 
 # options / functions
 driver.implicitly_wait(1)
-wait = WebDriverWait(driver, 10) # wait 15 seconds
+wait = WebDriverWait(driver, 10) # wait 15 seconds  
 
 def accept_cookies():
     # accept cookies when prompted
-    try: 
-        cookie_prompt = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, '#onetrust-accept-btn-handler')))
+    try:
+        cookie_prompt = wait.until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, '#onetrust-accept-btn-handler'))
+            )
         cookie_prompt.click()
     except TimeoutException:
         pass
 
 def close_overlays(element=driver):
     # in some cases triggered overlays do not close
-    # this function checks if one is open (=closing x exists) and attempts another close
+    # this function checks if a closing x exists and attempts another close
     try:
         xs = element.find_elements(By.CSS_SELECTOR, 'div.ui_close_x')
         for x in xs:
@@ -73,16 +80,28 @@ def close_overlays(element=driver):
         pass
 
 def expand_teaser_text():
-    # expand automatically trimmed text (find and click first occurence of 'mehr anzeigen', applies to all elements on page)
+    # expand automatically trimmed text: 
+    # find and click first occurence of 'mehr anzeigen',
+    # applies to all elements on page
     try:
-        driver.execute_script('arguments[0].click();', driver.find_element(by=By.XPATH, value='.//p[contains(@class, "partial_entry")]/span[contains(@onclick,"clickExpand")]'))
+        driver.execute_script(
+            'arguments[0].click();', 
+            driver.find_element(
+                By.XPATH, 
+                './/p[contains(@class, "partial_entry")]/span[contains(@onclick,"clickExpand")]'
+                )
+            )
     except NoSuchElementException:
         pass
 
 def switch_to_next_page(page):  
     # try to switch to next page, break if no possible
     try:
-        pagelink = driver.find_element(by=By.XPATH, value='.//div[contains(@class, "pageNumbers")]/a[contains(@data-page-number,"' + str(page+1) + '")]')
+        pagelink = driver.find_element(
+            By.XPATH, 
+            './/div[contains(@class, "pageNumbers")]/a[contains(@data-page-number,"' 
+            + str(page+1) + '")]'
+            )
         driver.execute_script('arguments[0].click();', pagelink)
         sleep(2)
         return True
@@ -92,56 +111,115 @@ def switch_to_next_page(page):
 def search_for_city(query):
     # search for city, open first result of suggestions
     query = query + ' Deutschland'
-    form = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.restaurants_home form')))
+    form = wait.until(
+        EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.restaurants_home form'))
+        )
     form.find_element(By.NAME, 'q').send_keys(query)
-    wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'input[value="' + query + '"]'))) # wait until full input processed
-    driver.get(wait.until(lambda d: d.find_element(By.CSS_SELECTOR, 'div#typeahead_results > a').get_attribute('href'))) # wait until suggestions show
+    wait.until(
+        EC.visibility_of_element_located((By.CSS_SELECTOR, 'input[value="' + query + '"]'))
+        ) 
+    driver.get(
+        wait.until(
+            lambda d: d.find_element(
+                By.CSS_SELECTOR, 'div#typeahead_results > a'
+                ).get_attribute('href')
+            )
+        )
 
-def get_restaurant_info_from_results_page(data_dict):
-    res_list = wait.until(EC.visibility_of_element_located((By.XPATH, './/div[contains(@data-test-target,"restaurants-list")]')))
-    res_list = res_list.find_elements(by=By.XPATH, value='.//div[contains(@data-test,"list_item")]')
+def get_restaurant_info_from_results_page(data_dict, city, scraped):
+    res_list = wait.until(
+        EC.visibility_of_element_located(
+            (By.XPATH, './/div[contains(@data-test-target,"restaurants-list")]')
+            )
+        )
+    res_list = res_list.find_elements(By.XPATH, './/div[contains(@data-test,"list_item")]')
+    res_skipped = 0 # counter for restaurants with no reviews, breaks loop if 3 in a row
     for res in res_list:
-        # check if reviews exist here (otherwise do not bother to save)
+        # check if reviews exist (otherwise do not bother to save)
         try:
-            res.find_element(by=By.XPATH, value='.//a[contains(@href, "#REVIEWS")]')
-            link = res.find_element(by=By.XPATH, value='(.//a[contains(@href,"Restaurant_Review")])[2]')
+            res.find_element(By.XPATH, './/a[contains(@href, "#REVIEWS")]')
+            link = res.find_element(
+                By.XPATH, '(.//a[contains(@href,"Restaurant_Review")])[2]'
+                )
             data_dict['name'].append(re.sub(r'[0-9]+\.\s', '', link.text))
             data_dict['url'].append(link.get_attribute('href'))
             data_dict['timestamp'].append(datetime.now().strftime('%Y-%m-%d, %H:%M:%S'))
+            data_dict['city'].append(city)
+            data_dict['scraped'].append(scraped)
+            continue_scrape = True
         except NoSuchElementException:
-            print('Skipped')
-            continue
+            res_skipped = res_skipped + 1
+            if (res_skipped > 3):
+                continue_scrape = False 
+                break
+            else:
+                continue
+    return continue_scrape
+
+def file_suffix_from_city_name(city_string):
+    # replaces German umlaute, strips spaces, returns lowercase string
+    umlaute_dict = {
+        'ä': 'ae', 
+        'ö': 'oe',
+        'ü': 'ue', 
+        'Ä': 'Ae',
+        'Ö': 'Oe', 
+        'Ü': 'Ue',
+        'ß': 'ss',
+        }
+    for k in umlaute_dict.keys():
+        city_string = city_string.replace(k, umlaute_dict[k])
+    city_suffix = city_string.replace(' ', '').lower()
+    return city_suffix
 
 def get_review_languages():
     try:
-        languagepicker = driver.find_element(by=By.XPATH, value='.//div[span[contains(text(),"Weitere Sprachen")]]')
+        # fetch review languages from language picker overlay
+        languagepicker = driver.find_element(
+            By.XPATH, './/div[span[contains(text(),"Weitere Sprachen")]]'
+            )
         driver.execute_script('arguments[0].click();', languagepicker)
-        languages = driver.find_elements(By.CSS_SELECTOR, 'div.ui_overlay.prw_filters_detail_language div.item')
+        languages = driver.find_elements(
+            By.CSS_SELECTOR, 'div.ui_overlay.prw_filters_detail_language div.item'
+            )
         inputtype = 'overlay'
         close_overlays()
         sleep(0.5)
     except NoSuchElementException:
         # if no language dropdown, use list of radio buttons
-        languages = driver.find_elements(By.CSS_SELECTOR, 'div.filters div.choices div.prw_filters_detail_language div.item')
+        languages = driver.find_elements(
+            By.CSS_SELECTOR, 'div.filters div.choices div.prw_filters_detail_language div.item'
+            )
         inputtype = 'radio'
     finally:
         lang_count = len(languages)
-        return(inputtype, lang_count) # passing the language picker leads to stale reference upon page change --> fetch in set_language
+        return(inputtype, lang_count)
 
 def set_review_language(inputtype, langno):
     close_overlays()      
     if (inputtype == 'overlay'):
-        languagepicker = driver.find_element(by=By.XPATH, value='.//div[span[contains(text(),"Weitere Sprachen")]]')
-        driver.execute_script('arguments[0].click();', languagepicker) # make overlay show again
-        languages = driver.find_elements(By.CSS_SELECTOR, 'div.ui_overlay.prw_filters_detail_language div.item') # re-fetch from new overlay
+        # trigger overlay and re-fetch language options
+        languagepicker = driver.find_element(
+            By.XPATH, './/div[span[contains(text(),"Weitere Sprachen")]]'
+            )
+        driver.execute_script('arguments[0].click();', languagepicker)
+        languages = driver.find_elements(
+            By.CSS_SELECTOR, 'div.ui_overlay.prw_filters_detail_language div.item'
+            )
     elif (inputtype == 'radio'):
-        languages = driver.find_elements(By.CSS_SELECTOR, 'div.filters div.choices div.prw_filters_detail_language div.item')
+        languages = driver.find_elements(
+            By.CSS_SELECTOR, 'div.filters div.choices div.prw_filters_detail_language div.item'
+            )
     language = languages[langno].get_attribute('data-value') # language name
     # set if not already active
-    if (languages[langno].find_element(By.CSS_SELECTOR, 'input').get_attribute('checked') == 'true'):
+    if (languages[langno].find_element(
+            By.CSS_SELECTOR, 'input'
+            ).get_attribute('checked') == 'true'):
         close_overlays()
     else:
-        driver.execute_script('arguments[0].click();', languages[langno].find_element(By.CSS_SELECTOR, 'input'))
+        driver.execute_script(
+            'arguments[0].click();', languages[langno].find_element(By.CSS_SELECTOR, 'input')
+            )
     sleep(0.5)
     return(language)
 
@@ -151,80 +229,123 @@ def fetch_data_attribute(element, attr, fallback):
     try:
         # fetch passed attribute
         if (attr == 'name'):
-            value = element.find_element(By.CSS_SELECTOR, '[data-test-target="top-info-header"]').text
+            value = element.find_element(
+                By.CSS_SELECTOR, '[data-test-target="top-info-header"]'
+                ).text
         elif (attr == 'street_w_no'):
-            value = element.find_element(by=By.XPATH, value='.//a[contains(@href,"#MAPVIEW")]').text.split(', ', 1)
+            value = element.find_element(
+                By.XPATH, './/a[contains(@href,"#MAPVIEW")]'
+                ).text.split(', ', 1)
             value = value[0]
         elif (attr == 'postcode'):
-            value = element.find_element(by=By.XPATH, value='.//a[contains(@href,"#MAPVIEW")]').text.split(', ', 1)
-            value = int(re.sub(r'[^\d]+', '', value[1])) # keep only postcode, delete city/country info
-        elif (attr == 'city'):
-            value = c # provided via list over which we loop
+            value = element.find_element(
+                By.XPATH, './/a[contains(@href,"#MAPVIEW")]'
+                ).text.split(', ', 1)
+            value = int(re.sub(r'[^\d]+', '', value[1]))
         elif (attr == 'cuisine1'):
-            value = element.find_element(by=By.XPATH, value='.//div[contains(text(), "KÜCHEN")]/following-sibling::div').text.split(', ', 3)
+            value = element.find_element(
+                By.XPATH, './/div[contains(text(), "KÜCHEN")]/following-sibling::div'
+                ).text.split(', ', 3)
             value = value[0]
         elif (attr == 'cuisine2'):
-            value = element.find_element(by=By.XPATH, value='.//div[contains(text(), "KÜCHEN")]/following-sibling::div').text.split(', ', 3)
+            value = element.find_element(
+                By.XPATH, './/div[contains(text(), "KÜCHEN")]/following-sibling::div'
+                ).text.split(', ', 3)
             value = value[1]
         elif (attr == 'cuisine3'):
-            value = element.find_element(by=By.XPATH, value='.//div[contains(text(), "KÜCHEN")]/following-sibling::div').text.split(', ', 3)
+            value = element.find_element(
+                By.XPATH, './/div[contains(text(), "KÜCHEN")]/following-sibling::div'
+                ).text.split(', ', 3)
             value = value[2]
         elif (attr == 'pricerange_lo'):
-            value = element.find_element(by=By.XPATH, value='.//div[contains(text(), "PREISSPANNE")]/following-sibling::div').text.split(' - ', 1)
+            value = element.find_element(
+                By.XPATH, 
+                './/div[contains(text(), "PREISSPANNE")]/following-sibling::div'
+                ).text.split(' - ', 1)
             value = int(re.sub(r'[^\d]+', '', value[0]))
         elif (attr == 'pricerange_hi'):
-            value = element.find_element(by=By.XPATH, value='.//div[contains(text(), "PREISSPANNE")]/following-sibling::div').text.split(' - ', 1)
+            value = element.find_element(
+                By.XPATH, 
+                './/div[contains(text(), "PREISSPANNE")]/following-sibling::div'
+                ).text.split(' - ', 1)
             value = int(re.sub(r'[^\d]+', '', value[1]))
         elif (attr == 'review_user_name'):
             if (fallback==0):
                 value = element.find_element(By.CSS_SELECTOR, 'h3.username').text
             else:
-                value = element.find_element(by=By.XPATH, value='.//div[contains(@class, "member_info")]/div[@class, "info_text")]/div').text
+                value = element.find_element(
+                    By.XPATH, 
+                    './/div[contains(@class, "member_info")]/div[@class, "info_text")]/div'
+                    ).text
         elif (attr == 'review_user_city'):
             if (fallback==0):
-                value = element.find_element(by=By.XPATH, value='(.//ul[contains(@class, "memberdescriptionReviewEnhancements")]/li)[2]').text.split(', ', 1)
+                value = element.find_element(
+                    By.XPATH, 
+                    '(.//ul[contains(@class, "memberdescriptionReviewEnhancements")]/li)[2]'
+                    ).text.split(', ', 1)
                 value = value[0].replace('Aus ','')
             else:
                 value = np.nan
         elif (attr == 'review_user_country'):
             if (fallback==0):
-                value = element.find_element(by=By.XPATH, value='(.//ul[contains(@class, "memberdescriptionReviewEnhancements")]/li)[2]').text.split(', ', 1)
+                value = element.find_element(
+                    By.XPATH, 
+                    '(.//ul[contains(@class, "memberdescriptionReviewEnhancements")]/li)[2]'
+                    ).text.split(', ', 1)
                 value = value[1]
             else:
                 value = np.nan
         elif (attr == 'review_user_signup'):
             if (fallback==0):
-                value = element.find_element(by=By.XPATH, value='.//li[contains(text(), "Tripadvisor-Mitglied seit")]').text
+                value = element.find_element(
+                    By.XPATH, './/li[contains(text(), "Tripadvisor-Mitglied seit")]'
+                    ).text
                 value = int(re.sub(r'[^\d]+', '', value))
             else:
                 value = np.nan
         elif (attr == 'review_user_reviews'):
             if (fallback==0):
-                value = element.find_element(by=By.XPATH, value='.//li[contains(@class, "countsReviewEnhancementsItem")]/span[contains(text(), "Beitr")]').text
+                value = element.find_element(
+                    By.XPATH, 
+                    './/li[contains(@class, "countsReviewEnhancementsItem")]/span[contains(text(), "Beitr")]'
+                    ).text
                 value = int(re.sub(r'[^\d]+', '', value))
             else:
-                value = element.find_element(by=By.XPATH, value='.//div[contains(@class, "member_info")]/span[contains(text(), "Bewertung")]').text
+                value = element.find_element(
+                    By.XPATH, 
+                    './/div[contains(@class, "member_info")]/span[contains(text(), "Bewertung")]'
+                    ).text
                 value = int(re.sub(r'[^\d]+', '', value))
         elif (attr == 'review_user_thumbsup'):
             if (fallback==0):
-                value = element.find_element(by=By.XPATH, value='.//li[contains(@class, "countsReviewEnhancementsItem")]/span[contains(text(), "Hilfreich")]').text
+                value = element.find_element(
+                    By.XPATH, 
+                    './/li[contains(@class, "countsReviewEnhancementsItem")]/span[contains(text(), "Hilfreich")]'
+                    ).text
                 value = int(re.sub(r'[^\d]+', '', value))
             else:
                 value=np.nan
         elif (attr == 'review_user_cities_visited'):
             if (fallback==0):
-                value = element.find_element(by=By.XPATH, value='.//li[contains(@class, "countsReviewEnhancementsItem")]/span[contains(text(), "besuchte")]').text
+                value = element.find_element(
+                    By.XPATH, 
+                    './/li[contains(@class, "countsReviewEnhancementsItem")]/span[contains(text(), "besuchte")]'
+                    ).text
                 value = int(re.sub(r'[^\d]+', '', value))
             else:
                 value=np.nan
         elif (attr == 'review_user_id'):
-            value = element.find_element(By.CSS_SELECTOR, 'div.memberOverlayLink.clickable').get_attribute('id').split('-', 1)
+            value = element.find_element(
+                By.CSS_SELECTOR, 'div.memberOverlayLink.clickable'
+                ).get_attribute('id').split('-', 1)
             value = value[0].split("_", 1)
             value = value[1]
         elif (attr == 'review_date'):
-            value = element.find_element(By.CSS_SELECTOR, 'span.ratingDate').get_attribute('title') # use German format, clean afterwards
+            value = element.find_element(By.CSS_SELECTOR, 'span.ratingDate').get_attribute('title')
         elif (attr == 'review_score'):
-            value = element.find_element(By.CSS_SELECTOR, 'span.ui_bubble_rating').get_attribute('class').replace('ui_bubble_rating bubble_','')
+            value = element.find_element(
+                By.CSS_SELECTOR, 'span.ui_bubble_rating'
+                ).get_attribute('class').replace('ui_bubble_rating bubble_','')
             value = int(int(value)/10)
         elif (attr == 'review_title'):
             value = element.find_element(By.CSS_SELECTOR, 'div.quote a span.noQuotes').text
@@ -237,65 +358,163 @@ def fetch_data_attribute(element, attr, fallback):
     finally:
         return(value)  
 
-
-### (1) RESTAURANT LIST ###
+### (0) ALLOW CHECKING OF CURRENT STATUS ###
 '''
- Fetch all restaurants per city, save:
- - names
- - urls (direct links)
+Checking order:
+
+(1) Load user-provided city list and check if cities have changed (compare to 
+    tripadvisor_query_cities.csv log).
+
+    If yes: add to tripadvisor_query_cities.csv
+    If no:
+
+    (2) Check if restaurant scraping targets have been collected for each city (compare to 
+    tripadvisor_query_cities.csv log):
+    
+        If no: collect lists for cities for which scraping targets are missing
+        If yes: 
+
+        (3) Check for which cities/restaurants the scraping of restaurant info and reviews is not
+            yet complete. Collect info where missing.
+
+The setup is step-wise and no restaurant info/reviews will be fetched before the target list is
+complete. Might be relaxed once the overall setup has been tested.
+'''
+
+print('')
+print('Checking Tripadvisor scraping status:')
+print('-------------------------------------')
+
+# user input
+input_cities = pd.read_csv(wd + 'data/raw/tripadvisor_input_cities.csv', header=None)[0]
+
+# initiate city query log
+try:
+    df_query_cities = pd.read_csv(wd + 'data/raw/tripadvisor_query_cities.csv')
+except FileNotFoundError:
+    df_query_cities = pd.DataFrame(columns = ['city', 'scraping_targets', 'scraped'])
+
+# Add new user-provided cities to tripadvisor_query_cities
+cities_n_old = len(df_query_cities)
+for city in input_cities:
+    if (city not in df_query_cities['city'].values): 
+        row = [[city, np.nan, np.nan]]
+        df_query_cities = df_query_cities.append(
+            pd.DataFrame(row, columns = ['city', 'scraping_targets', 'scraped']),
+            ignore_index = True
+            )
+df_query_cities.to_csv(wd + 'data/raw/tripadvisor_query_cities.csv', index=False)
+cities_n_delta = len(df_query_cities) -  cities_n_old
+if (cities_n_delta > 0):
+    print(str(cities_n_delta) + ' cities added to city query list.')
+else:
+    print('City query list up to date.')
+
+
+### (1) SCRAPE RESTAURANT TARGET LIST BY CITY ###
+'''
+Fetch all restaurants per city, save:
+ - city
+ - restaurant names
+ - restaurant urls (direct links)
  - timestamp
 '''
-cities = ['Itzehoe'] # provide via csv
 
-for c, city in enumerate(cities):
-
+# Get list of cities for which scraping targets are missing
+cities_targetscrape = df_query_cities[df_query_cities['scraping_targets'].isin([np.nan])]['city']
+if (len(cities_targetscrape) > 0):
+    print('Scraping target list missing for ' + str(len(cities_targetscrape)) + ' cities.')
     print('')
-    print('Scraping Tripadvisor restaurant database')
-    #print(city + ':' + x + 'Restaurants')
+    print('Scraping Tripadvisor restaurant database city-by-city:')
+    print('------------------------------------------------------')
+else:
+    print('Scraping target lists exist for each city.')
 
-    # get restaurant page
+for c, city in enumerate(cities_targetscrape, start=1):
+
+    # get restaurant page and search for city
     driver.get('https://www.tripadvisor.de/Restaurants')
     accept_cookies()
-
-    # search for city
     search_for_city(city)
-    
-    # loop over pages of restaurants displayed (assume a maximum of 1000 pages, each with 30 results)
+
+    # loop over pages of restaurant search results (assume max. 1000 pages with 30 results)
     data = {
+        'city': [],
         'name': [],
         'url': [],
-        'timestamp': []
+        'timestamp': [],
+        'scraped': []
     }
     for page in range(1,1000):
         # fetch and save result info from page
-        get_restaurant_info_from_results_page(data)
-        # switch to next page until depleted
-        if (switch_to_next_page(page) is False):
+        results = get_restaurant_info_from_results_page(data_dict=data, city=city, scraped=np.nan)
+        if (results == True):
+            # switch to next page until depleted
+            if (switch_to_next_page(page) is False): break
+        else:
             break
     
-    # create dataframe, drop duplicates, save CSV
+    # create dataframe
+    # drop potential duplicates due to sponsored results
+    # check for missings (no missings permissible, break if missings present)
+    # save CSV
     df = pd.DataFrame.from_dict(data)
     df = df.drop_duplicates()
-    df.to_csv('file1.csv', index=False) # NAMING SCHEME?
-    print('(' + c + ') ' + city + ': ' + len(df) + 'restaurants saved in scraping list.')
+    missings = df.isnull().sum()
+    if ((len(df)!=0) & (missings['name']==0) & (missings['url']==0) & (missings['timestamp']==0)):
+        relpath = (
+            'data/raw/tripadvisor_query_restaurants_' + file_suffix_from_city_name(city) + '.csv'
+            )
+        df.to_csv(wd + relpath, index=False)
+        print('(' + str(c) + ') ' + city + ': ' + str(len(df)) 
+              + ' restaurants saved in scraping list.')
+        # add path to status file
+        df_query_cities['scraping_targets'] = pd.np.where(
+            df_query_cities['city'] == city, 
+            relpath, 
+            df_query_cities['scraping_targets']
+            )
+        df_query_cities.to_csv(wd + 'data/raw/tripadvisor_query_cities.csv', index=False)
+    else:
+        print('(' + str(c) + ') ' + city + ': No scraping list saved due to ' 
+              + str(missings) + ' missings / ' + str(len(df)) + ' rows in dataframe.')
+        break
 
 
-# def check_inclusion_criteria ():
-# # REWRITE SO THAT THIS IS ALREADY CHECKED WHEN RESTAURANT LIST IS SCRAPED!
-# # check if reviews exist (skip restaurant if not)
-# try:
-#     driver.find_element(By.CSS_SELECTOR, 'div#REVIEWS span.reviews_header_count')
-#     res_count = res_count + 1 # counter for results from which we scrape info
-#     rev_count = 0 # counter for reviews for each result
-#     sys.stdout.write('\n')
-#     print('(' + str(res_count) + ') ' + driver.find_element(By.CSS_SELECTOR, '[data-test-target="top-info-header"]').text)
-# except NoSuchElementException:
-#     # think of a way to exclude from saved restaurant list?
-#     continue
+### (2) SCRAPE RESTAURANT INFO AND REVIEWS FOR ALL TARGETS IN CITIES ###
+'''
+...
+'''
+# check scraping status of restaurant info/reviews
+cities_infoscrape = df_query_cities[
+    df_query_cities['scraped'].isin([np.nan, 'PENDING'])
+    ]['city']
+if (len(cities_infoscrape) > 0):
+    print('')
+    print('Restaurant info/review missing for ' + str(len(cities_infoscrape)) + ' cities.')
+    print('Initiating scraper...')
+else:
+    print('Scraping already completed.')
 
+for c, city in enumerate(cities_infoscrape, start=1):
 
+    # add PENDING status to status file
+    df_query_cities['scraped'] = pd.np.where(
+        df_query_cities['city'] == city, 
+        'PENDING', 
+        df_query_cities['scraped']
+        )
+    df_query_cities.to_csv(wd + 'data/raw/tripadvisor_query_cities.csv', index=False)
 
-# for res in res_list:
+    # get restaurant links from target list file per city
+    relpath = df_query_cities[df_query_cities['city'] == city]['scraping_targets']
+    df_query_restaurants = pd.read_csv(wd + relpath.values[0])
+    restaurant_targets = df_query_restaurants[
+        df_query_restaurants['scraped'].isin([np.nan])
+        ]['url']
+
+    for res_link in restaurant_targets:
+        print(res_link)
         
 #     sleep(3)
     
@@ -348,10 +567,12 @@ for c, city in enumerate(cities):
 #         'pricerange_hi'
 #     ]
 #     for attr in attributes_restaurant:
-#         if (attr != 'url'):
-#             data[attr].append(fetch_data_attribute(element=driver, attr=attr, fallback=0))
-#         else:
+#         if (attr == 'url'):
 #             data[attr].append(res_link)
+#         elif (attr == 'city'):
+#             data[attr].append(city)
+#         else:
+#             data[attr].append(fetch_data_attribute(element=driver, attr=attr, fallback=0))
 
 #     ### get reviews and review related info
 
@@ -437,12 +658,19 @@ for c, city in enumerate(cities):
 #     df = pd.DataFrame.from_dict(data)
 #     print(df[['review_user_name','review_user_signup','review_id', 'review_user_overlay_failed']])
 
-#     # close driver and switch to city restaurant results window
-#     driver.close()
-#     driver.switch_to.window(original_window)
+#     # save dataframe to disk
 
 # # combine all restaurant datasets per city
 
+# Here: merge everything after a few checks, write entry in log, save as feather dataset
+# add relpath to dataset to status file
+    # relpath = ...
+    # df_query_cities['scraped'] = pd.np.where(
+    #     df_query_cities['city'] == city, 
+    #     relpath, 
+    #     df_query_cities['scraped']
+    #     )
+    # df_query_cities.to_csv(wd + 'data/raw/tripadvisor_query_cities.csv', index=False)
 
 # # city loop close
 # print('Fetched info for ' + str(res_count) + ' Restaurants in ' + c + '.')
