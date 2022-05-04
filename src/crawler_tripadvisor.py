@@ -47,17 +47,15 @@ options.set_preference('intl.accept_languages', 'de-DE, de')
 #options.binary_location = wd + 'env/Library/bin/firefox.exe' # activate
 
 
-### DRIVER / FUNCTIONS ###
+### FUNCTIONS ###
 
-# start driver
-driver = webdriver.Firefox(
-    service=Service(GeckoDriverManager().install()), 
-    options=options
+def start_driver():
+    driver = webdriver.Firefox(
+        service=Service(GeckoDriverManager().install()), 
+        options=options
     )
-
-# options / functions
-driver.implicitly_wait(1)
-wait = WebDriverWait(driver, 10) # wait 15 seconds  
+    driver.implicitly_wait(1)
+    wait = WebDriverWait(driver, 10) # wait 15 seconds  
 
 def accept_cookies():
     # accept cookies when prompted
@@ -145,6 +143,9 @@ def get_restaurant_info_from_results_page(data_dict, city, scraped):
             data_dict['url'].append(link.get_attribute('href'))
             data_dict['timestamp'].append(datetime.now().strftime('%Y-%m-%d, %H:%M:%S'))
             data_dict['city'].append(city)
+            id_string = link.text.text.split('-', 3)
+            id_string = id_string[1] + id_string[2] 
+            data_dict['id'].append(id_string)
             data_dict['scraped'].append(scraped)
             continue_scrape = True
         except NoSuchElementException:
@@ -427,8 +428,19 @@ if (len(cities_targetscrape) > 0):
     print('')
     print('Scraping Tripadvisor restaurant database city-by-city:')
     print('------------------------------------------------------')
+    start_driver()
 else:
     print('Scraping target lists exist for each city.')
+
+# data structure
+data_dict = {
+    'city': [],
+    'name': [],
+    'url': [],
+    'id': [],
+    'timestamp': [],
+    'scraped': []
+}
 
 for c, city in enumerate(cities_targetscrape, start=1):
 
@@ -437,14 +449,9 @@ for c, city in enumerate(cities_targetscrape, start=1):
     accept_cookies()
     search_for_city(city)
 
+    data = data_dict
+
     # loop over pages of restaurant search results (assume max. 1000 pages with 30 results)
-    data = {
-        'city': [],
-        'name': [],
-        'url': [],
-        'timestamp': [],
-        'scraped': []
-    }
     for page in range(1,1000):
         # fetch and save result info from page
         results = get_restaurant_info_from_results_page(data_dict=data, city=city, scraped=np.nan)
@@ -480,6 +487,9 @@ for c, city in enumerate(cities_targetscrape, start=1):
               + str(missings) + ' missings / ' + str(len(df)) + ' rows in dataframe.')
         break
 
+    # close driver when finished
+    if (c == len(cities_targetscrape)): driver.close()
+
 
 ### (2) SCRAPE RESTAURANT INFO AND REVIEWS FOR ALL TARGETS IN CITIES ###
 '''
@@ -492,11 +502,60 @@ cities_infoscrape = df_query_cities[
 if (len(cities_infoscrape) > 0):
     print('')
     print('Restaurant info/review missing for ' + str(len(cities_infoscrape)) + ' cities.')
-    print('Initiating scraper...')
+    print('')
+    print('Scraping restaurant info/reviews:')
+    print('---------------------------------')
+    start_driver()
 else:
-    print('Scraping already completed.')
+    sys.exit('Scraping already completed.')
 
+# data structure
+data_dict = {
+    'id': [],
+    'name': [],
+    'url': [],
+    'street_w_no': [],
+    'postcode': [],
+    'city': [],
+    'cuisine1': [],
+    'cuisine2': [],
+    'cuisine3': [],
+    'pricerange_lo': [],
+    'pricerange_hi': [],
+    'review_user_name': [],
+    'review_user_city': [],
+    'review_user_country': [],
+    'review_user_signup': [],
+    'review_user_reviews': [],
+    'review_user_thumbsup': [],
+    'review_user_cities_visited': [],
+    'review_user_overlay_failed': [],
+    'review_user_id': [],
+    'review_date': [],
+    'review_score': [],
+    'review_title': [],
+    'review_text': [],
+    'review_language': [],
+    'review_id': [],
+    'timestamp': [],
+    }
+attributes_restaurant = [
+    'name', 'url', 'street_w_no', 'postcode', 'city', 'cuisine1', 'cuisine2', 'cuisine3',
+    'pricerange_lo', 'pricerange_hi'
+    ]
+attributes_user_overlay = [
+    'review_user_name', 'review_user_city', 'review_user_country', 'review_user_signup', 
+    'review_user_reviews', 'review_user_thumbsup', 'review_user_cities_visited' 
+    ]
+attributes_review = [
+    'review_user_id', 'review_date', 'review_score', 'review_title', 'review_text', 'review_id'
+    ]
+
+### loop over cities
 for c, city in enumerate(cities_infoscrape, start=1):
+
+    print('')
+    print(city)
 
     # add PENDING status to status file
     df_query_cities['scraped'] = pd.np.where(
@@ -506,172 +565,157 @@ for c, city in enumerate(cities_infoscrape, start=1):
         )
     df_query_cities.to_csv(wd + 'data/raw/tripadvisor_query_cities.csv', index=False)
 
-    # get restaurant links from target list file per city
-    relpath = df_query_cities[df_query_cities['city'] == city]['scraping_targets']
-    df_query_restaurants = pd.read_csv(wd + relpath.values[0])
-    restaurant_targets = df_query_restaurants[
+    # get restaurant links from target list file per city (check if already scraped)
+    relpath_query_restaurants = df_query_cities[df_query_cities['city'] == city]['scraping_targets']
+    relpath_query_restaurants = relpath_query_restaurants.values[0]
+    df_query_restaurants = pd.read_csv(wd + relpath_query_restaurants)
+    targets = df_query_restaurants[
         df_query_restaurants['scraped'].isin([np.nan])
-        ]['url']
+        ]
 
-    for res_link in restaurant_targets:
-        print(res_link)
-        
-#     sleep(3)
+    ### loop over restaurants
+    for target_id, target_name, target_link in zip(targets['id'], targets['name'], targets['url']):
     
-#     ### go to restaurant page
-#     res_link = 'https://www.tripadvisor.de/Restaurant_Review-g187323-d19821000-Reviews-Ama_Cafe-Berlin.html'
-#     driver.get(res_link + '#REVIEWS')
-#     accept_cookies()
-
-#     # dict to be filled for each restaurant
-#     data = {
-#         'name': [],
-#         'url': [],
-#         'street_w_no': [],
-#         'postcode': [],
-#         'city': [],
-#         'cuisine1': [],
-#         'cuisine2': [],
-#         'cuisine3': [],
-#         'pricerange_lo': [],
-#         'pricerange_hi': [],
-#         'review_user_name': [],
-#         'review_user_city': [],
-#         'review_user_country': [],
-#         'review_user_signup': [],
-#         'review_user_reviews': [],
-#         'review_user_thumbsup': [],
-#         'review_user_cities_visited': [],
-#         'review_user_overlay_failed': [],
-#         'review_user_id': [],
-#         'review_date': [],
-#         'review_score': [],
-#         'review_title': [],
-#         'review_text': [],
-#         'review_language': [],
-#         'review_id': [],
-#         'timestamp': [],
-#     }
-
-#     # get restaurant general info
-#     attributes_restaurant = [
-#         'name',
-#         'url',
-#         'street_w_no',
-#         'postcode',
-#         'city',
-#         'cuisine1',
-#         'cuisine2',
-#         'cuisine3',
-#         'pricerange_lo',
-#         'pricerange_hi'
-#     ]
-#     for attr in attributes_restaurant:
-#         if (attr == 'url'):
-#             data[attr].append(res_link)
-#         elif (attr == 'city'):
-#             data[attr].append(city)
-#         else:
-#             data[attr].append(fetch_data_attribute(element=driver, attr=attr, fallback=0))
-
-#     ### get reviews and review related info
-
-#     # (1) review language selection
-#     inputtype, lang_count = get_review_languages()
-#     for l in range(1, lang_count):
+        sleep(3)
+        driver.get(target_link + '#REVIEWS')
+        accept_cookies()
         
-#         language = set_review_language(inputtype=inputtype, langno=l) 
-#         sleep(2)
-        
-#         # (2) extract review info (loop over pages)
-#         unscrapedpages = True # as long as there are further pages, continue                
-#         while unscrapedpages is True: 
-#         expand_teaser_text()
-#         # fetch all reviews on page
-#         rev_list = driver.find_elements(By.CSS_SELECTOR, 'div.listContainer div.review-container')
-#         for rev in rev_list:
-#             # scroll into view
-#             driver.execute_script('arguments[0].scrollIntoView();', rev)
-#             # continue loop if review translated (then only fetch original)
-#             translated = rev.find_element(By.CSS_SELECTOR, 'div.quote span.noQuotes')
-#             if (str(translated.get_attribute('lang')) != ''):
-#                 continue
-#             else:
-#                 # count
-#                 rev_count = rev_count + 1
-#                 # user / review info
-#                 attributes_user_overlay = [
-#                     'review_user_name',
-#                     'review_user_city',
-#                     'review_user_country', 
-#                     'review_user_signup', 
-#                     'review_user_reviews', 
-#                     'review_user_thumbsup', 
-#                     'review_user_cities_visited' 
-#                 ]
-#                 attributes_review = [
-#                     'review_user_id',
-#                     'review_date',
-#                     'review_score', 
-#                     'review_title', 
-#                     'review_text',
-#                     'review_id'
-#                 ]
-#                 # fetch
-#                 try:
-#                     # try to get user info overlay
-#                     close_overlays()
-#                     sleep(0.5) # allow DOM to adjust
-#                     driver.execute_script('arguments[0].click();', rev.find_element(By.CSS_SELECTOR, 'div.memberOverlayLink.clickable'))
-#                     wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span.ui_popover div.memberOverlay h3.username'))) # wait until overlay content visible
-#                     overlay = driver.find_element(By.CSS_SELECTOR, 'span.ui_popover div.memberOverlay')
-#                     fallback = 0
-#                     for attr in attributes_user_overlay:
-#                         data[attr].append(fetch_data_attribute(element=overlay, attr=attr, fallback=fallback))
-#                     close_overlays() 
-#                 except TimeoutException:
-#                     # if user overlay fails, get user info set already visible
-#                     fallback = 1
-#                     for attr in attributes_user_overlay:
-#                         data[attr].append(fetch_data_attribute(element=rev, attr=attr, fallback=fallback))
-#                 finally:
-#                     data['review_user_overlay_failed'].append(fallback)
-#                     # get review info
-#                     for attr in attributes_review:
-#                         data[attr].append(fetch_data_attribute(element=rev, attr=attr, fallback=0))
-#                     data['review_language'].append(language)
-#                     # append current timestamp
-#                     data['timestamp'].append(datetime.now().strftime('%Y-%m-%d, %H:%M:%S'))
-#                     # print status
-#                     sys.stdout.write('\r └─ Review languages %i, total reviews %i' % (l, rev_count))
-#                     sys.stdout.flush()
-#         if (i>1):
-#                 try:
-#                     pagelink = driver.find_element(by=By.XPATH, value='.//div[contains(@class, "pageNumbers")]/a[contains(@data-page-number,"' + str(i) + '")]')
-#                     driver.execute_script('arguments[0].click();', pagelink)
-#                 except NoSuchElementException:
-#                     break # no more pages
+        data = data_dict
+
+        # get restaurant data
+        for attr in attributes_restaurant:
+            if (attr == 'city'):
+                data[attr].append(city)
+            elif (attr == 'id'):
+                data[attr].append(target_id)
+            elif (attr == 'name'):
+                data[attr].append(target_name)
+            elif (attr == 'url'):
+                data[attr].append(target_link)
+            else:
+                data[attr].append(fetch_data_attribute(element=driver, attr=attr, fallback=0))
+
+        ### get reviews and review related info
+        rev_count = 0
+        # review language selection
+        inputtype, lang_count = get_review_languages()
+        for l in range(1, lang_count):
+            language = set_review_language(inputtype=inputtype, langno=l) 
+            sleep(2)
+            # extract review info per language (loop over pages)
+            for page in range(1,1000):
+                expand_teaser_text()
+                # fetch all reviews on page
+                rev_list = driver.find_elements(
+                    By.CSS_SELECTOR, 'div.listContainer div.review-container'
+                    )
+                for rev in rev_list:
+                    # scroll into view
+                    driver.execute_script('arguments[0].scrollIntoView();', rev)
+                    # continue loop if review translated (then only fetch original)
+                    translated = rev.find_element(By.CSS_SELECTOR, 'div.quote span.noQuotes')
+                    if (str(translated.get_attribute('lang')) != ''): 
+                        continue
+                    # count
+                    rev_count = rev_count + 1
+                    # fetch
+                    try:
+                        # try to get user info overlay
+                        close_overlays()
+                        sleep(0.5) # allow DOM to adjust
+                        driver.execute_script(
+                            'arguments[0].click();', 
+                            rev.find_element(By.CSS_SELECTOR, 'div.memberOverlayLink.clickable')
+                            )
+                        wait.until(EC.visibility_of_element_located(
+                            (By.CSS_SELECTOR, 'span.ui_popover div.memberOverlay h3.username')
+                            )) # wait until overlay content visible
+                        overlay = driver.find_element(
+                            By.CSS_SELECTOR, 'span.ui_popover div.memberOverlay'
+                            )
+                        fallback = 0
+                        for attr in attributes_user_overlay:
+                            data[attr].append(fetch_data_attribute(
+                                element=overlay, attr=attr, fallback=fallback
+                                ))
+                        close_overlays() 
+                    except TimeoutException:
+                        # if user overlay fails, get user info set already visible
+                        fallback = 1
+                        for attr in attributes_user_overlay:
+                            data[attr].append(fetch_data_attribute(
+                                element=rev, attr=attr, fallback=fallback
+                                ))
+                    finally:
+                        data['review_user_overlay_failed'].append(fallback)
+                        # get review info
+                        for attr in attributes_review:
+                            data[attr].append(fetch_data_attribute(
+                                element=rev, attr=attr, fallback=0
+                                ))
+                        data['review_language'].append(language)
+                        # append current timestamp
+                        data['timestamp'].append(datetime.now().strftime('%Y-%m-%d, %H:%M:%S'))
+                        # print status
+                        sys.stdout.write(
+                            '\r ├─ %s: Review languages %i, total reviews %i' 
+                            % (target_name, l, rev_count)
+                            )
+                        sys.stdout.flush()
+                # switch to next page until depleted
+                if (switch_to_next_page(page) is False): break
+            # language loop close
+        # create dataframe per restaurant
+        for attr in attributes_restaurant: 
+            data[attr] = data[attr]*rev_count # expand fixed restaurant info
+        df = pd.DataFrame.from_dict(data)
+
+        ### save dataframe per restaurant after some basic checks, keep log 
+        missings = df.isnull().sum().sum()
+        rev_count_site = int(re.sub(r'[^\d]+', '', 
+            driver.find_element(By.CSS_SELECTOR, 'span.reviews_header_count').text
+            ))
+        if ((len(df)!=0) & (len(df) == rev_count_site) & (missings < (len(df)*len(df.columns)))):
+            # save under temp (will be deleted after dataset is complete for city)
+            relpath_results_restaurants = (
+                'data/temp/tripadvisor_results_restaurant_' 
+                + file_suffix_from_city_name(city) + '_'
+                + target_id + '.csv'
+                )
+            df.to_csv(wd + relpath_results_restaurants, index=False)
+            print('\n Dataframe saved: ' + relpath_results_restaurants)
+            # add path to restaurant query file
+            df_query_restaurants['scraped'] = pd.np.where(
+                df_query_restaurants['id'] == target_id, 
+                relpath_results_restaurants, 
+                df_query_restaurants['scraped']
+                )
+            df_query_restaurants.to_csv(wd + relpath_query_restaurants, index=False)
+        else:
+            print('\n Dataframe not saved.')
+            print('Dataframe length: ' + str(len(df)))
+            print('Review count on Tripadvisor: ' + str(rev_count))
+            print(str(missings) + '/' + str(len(df)*len(df.columns)) + 'missing.')
+            break
+
+    # combine all restaurant datasets per city
+    for r, relpath_results_restaurants in enumerate(df_query_restaurants['scraped'], start=1):
+        df_restaurant = pd.read_csv(wd + relpath_results_restaurants)
+        if (r==1):
+            df_results_city = df_restaurant
+        else:
+            df_results_city = df_results_city.append(df_restaurant)
     
-#     # save dataframe per restaurant
-#     for attr in attributes_restaurant: 
-#         data[attr] = data[attr]*rev_count # expand fixed restaurant info
-#     df = pd.DataFrame.from_dict(data)
-#     print(df[['review_user_name','review_user_signup','review_id', 'review_user_overlay_failed']])
+    # save feather and delete delete restaurant result spreadsheets when successful
+    try:
+        df_results_city.to_feather(wd + 'data/raw/tripdavisor_results_' + city)
+        save_success = True
+    except Exception:
+        save_success = False
+        print('Merged dataset for ' + city + ' could not be saved.')
+    if (save_success == True):
+        for relpath_results_restaurants in df_query_restaurants['scraped']:
+            os.remove(wd + relpath_results_restaurants)
 
-#     # save dataframe to disk
-
-# # combine all restaurant datasets per city
-
-# Here: merge everything after a few checks, write entry in log, save as feather dataset
-# add relpath to dataset to status file
-    # relpath = ...
-    # df_query_cities['scraped'] = pd.np.where(
-    #     df_query_cities['city'] == city, 
-    #     relpath, 
-    #     df_query_cities['scraped']
-    #     )
-    # df_query_cities.to_csv(wd + 'data/raw/tripadvisor_query_cities.csv', index=False)
-
-# # city loop close
-# print('Fetched info for ' + str(res_count) + ' Restaurants in ' + c + '.')
-# driver.close()
+    # close driver when finished
+    if (c == len(cities_infoscrape)): driver.close()

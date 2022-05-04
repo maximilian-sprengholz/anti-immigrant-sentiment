@@ -17374,3 +17374,21 @@ DevTools listening on ws://localhost:50800/devtools/browser/ce81086d-ab46-4a36-b
 1651595022829	Marionette	INFO	Listening on port 50951
 Read port: 50951
 1651595022921	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+1651595059304	geckodriver	INFO	Listening on 127.0.0.1:51798
+1651595061294	mozrunner::runner	INFO	Running command: "C:\\Program Files\\Mozilla Firefox\\firefox.exe" "--marionette" "--remote-debugging-port" "51799" "--remote-allow-hosts" "localhost" "-no-remote" "-profile" "C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofileJQCGcC"
+console.error: GPOParser.jsm: 
+  Unable to parse JSON for ExtensionSettings
+console.error: Enterprise Policies: 
+  Policy SearchEngines is only allowed on ESR
+1651595061913	Marionette	INFO	Marionette enabled
+console.error: Policies.jsm: 
+  OfferToSaveLoginsDefault ignored because OfferToSaveLogins is present.
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofileJQCGcC\\search.json.mozlz4", (void 0)))
+JavaScript error: resource://gre/modules/ExtensionContent.jsm, line 574: TypeError: PrecompiledScript.executeInGlobal: Argument 1 is not an object.
+DevTools listening on ws://localhost:51799/devtools/browser/374e7989-4ace-4b36-8c4e-c80423085ad7
+1651595066506	Marionette	INFO	Listening on port 52003
+Read port: 52003
+1651595066619	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+1651595185527	Marionette	INFO	Stopped listening on port 52003
+console.warn: TopSitesFeed: Failed to fetch data from Contile server: NetworkError when attempting to fetch resource.
+JavaScript error: chrome://remote/content/marionette/cert.js, line 55: NS_ERROR_NOT_AVAILABLE: Component returned failure code: 0x80040111 (NS_ERROR_NOT_AVAILABLE) [nsICertOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData]
