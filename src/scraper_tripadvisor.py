@@ -68,7 +68,7 @@ def run_shell_command(command=str, wd=wd):
             command.append(word)
         # determine end of quoted string
         if (re.search('"$', word) != None) & (inquote==True):
-            command.append(quoted_string)
+            command.append(quoted_string.replace('"',''))
             inquote=False
     # run and return error codes
     result = subprocess.run(command, shell=True, check=False, capture_output=True, cwd=wd)
@@ -94,13 +94,13 @@ def track_status_in_readme(count=int, total=int):
         except IOError:
             return 'README could not be written.'
         returncode, error = run_shell_command('git add README.md')
-        returncode, error = run_shell_command('git commit -m "README automatic status update')
+        returncode, error = run_shell_command('git commit -m "Automatic status update"')
         returncode, error = run_shell_command('git push origin main')
+        break
     if (returncode != 0): 
-        print('Scraping status could not be tracked.')
-        print(error)
+        return 'Scraping status could not be tracked. ' + error
     else:
-        print('Scraping status successfully tracked.')
+        return 'Scraping status successfully tracked.'
 
 def accept_cookies():
     # accept cookies when prompted
@@ -563,7 +563,7 @@ def get_scraping_targets(df_query_cities, cities_to_be_scraped):
             print('(' + str(c) + ') ' + city + ': ' + str(len(df)) 
                 + ' restaurants saved in scraping target list.')
             # add path to status file
-            df_query_cities['scraping_targets'] = pd.np.where(
+            df_query_cities['scraping_targets'] = np.where(
                 df_query_cities['city'] == city, 
                 relpath, 
                 df_query_cities['scraping_targets']
@@ -640,7 +640,7 @@ def scrape_target_info(df_query_cities, cities_to_be_scraped):
         print(city)
 
         # add PENDING status to status file
-        df_query_cities['scraped'] = pd.np.where(
+        df_query_cities['scraped'] = np.where(
             df_query_cities['city'] == city, 
             'PENDING', 
             df_query_cities['scraped']
@@ -793,7 +793,7 @@ def scrape_target_info(df_query_cities, cities_to_be_scraped):
                 df.to_csv(wd + relpath_results_restaurants, index=False)
                 print('\n │  └─ Dataframe saved: ' + relpath_results_restaurants)
                 # add path to restaurant query file
-                df_query_restaurants['scraped'] = pd.np.where(
+                df_query_restaurants['scraped'] = np.where(
                     df_query_restaurants['id'] == target_id, 
                     relpath_results_restaurants, 
                     df_query_restaurants['scraped']
@@ -809,12 +809,15 @@ def scrape_target_info(df_query_cities, cities_to_be_scraped):
                 if (r==1):
                     df_results_city = df_restaurant
                 else:
-                    df_results_city = df_results_city.append(df_restaurant)
+                    df_results_city = pd.concat([df_results_city, df_restaurant])
             
             # save feather and delete delete restaurant result spreadsheets when successful
             try:
-                relpath_results_city = 'data/raw/tripdavisor_results_' + city
-                df_results_city.to_feather(wd + relpath_results_city)
+                relpath_results_city = (
+                    'data/raw/tripdavisor_results_' 
+                    + file_suffix_from_city_name(city)
+                    )
+                df_results_city.reset_index().to_feather(wd + relpath_results_city + '.feather')
                 save_success = True
                 print(' ├─ Merged dataset saved: ' + relpath_results_city + '.feather')
                 print(' └─ ' + track_status_in_readme(c, len(df_query_cities)))
