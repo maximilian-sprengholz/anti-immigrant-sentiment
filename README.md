@@ -7,12 +7,14 @@ We measure anti-immigrant sentiment in Germany expressed in online reviews of im
 ## Current status
 
 __Tripadvisor (restaurants)__:
-- [ ] Crawler written: basic functionality works
-- [ ] Crawler running: {when running, a counter will be dynamically updated 'x/X cities scraped'}
+- [x] Crawler written
+- [ ] Crawler testing (5 sample cities): 0/5 cities scraped
+- [ ] Crawler running
 
 __Google Maps (restaurants, places of worship, grocery stores)__:
-- [ ] Crawler written:
-- [ ] Crawler running: {when running, a counter will be dynamically updated 'x/X postcodes scraped'}
+- [ ] Crawler written
+- [ ] Crawler testing:
+- [ ] Crawler running:
 
 ## Project organization
 
@@ -42,7 +44,7 @@ __Google Maps (restaurants, places of worship, grocery stores)__:
 
 ## Usage
 
-To replicate the analysis and docs, you need to have [Anaconda](https://www.anaconda.com/products/individual) installed and `conda` available via shell. Windows users probably need [Make](https://www.gnu.org/software/make/) too. Do the following in your shell:
+To replicate the analysis and docs, you need to have [Anaconda](https://www.anaconda.com/products/individual) installed and `conda` available via shell. Dependencies which are unavailable for ARM-based Macs in the conda/pip repositories (e.g. Firefox) need to be manually installed (and potentially made available to PATH).
 
 ```bash
 # create and activate conda environment (initialized as subdirectory ./env)
