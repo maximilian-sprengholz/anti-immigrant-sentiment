@@ -480,12 +480,12 @@ def init_scraper(driver, wait):
         print('Scraping target list missing for ' + str(len(cities_to_be_scraped)) + ' cities.')
         get_scraping_targets(df_query_cities, cities_to_be_scraped)
     else:
-        print('Scraping target list present for each city.')
+        print('Scraping target list available for each city.')
  
     # (3) Get list of cities with no/incomplete scraping of restaurant info/reviews
     cities_to_be_scraped = df_query_cities[
         (~df_query_cities['scraping_targets'].isin([np.nan]))
-        & df_query_cities['scraped'].isin([np.nan, 'PENDING'])
+        & df_query_cities['scraped'].isin([np.nan])
         ]['city']
     if (len(cities_to_be_scraped) > 0):
         print('Restaurant info/reviews missing for ' + str(len(cities_to_be_scraped)) + ' cities.')
@@ -562,10 +562,10 @@ def get_scraping_targets(df_query_cities, cities_to_be_scraped):
             print('(' + str(c) + ') ' + city + ': ' + str(len(df)) 
                 + ' restaurants saved in scraping target list.')
             # add path to status file
-            df_query_cities['scraping_targets'] = np.where(
+            df_query_cities['scraping_targets'].mask(
                 df_query_cities['city'] == city, 
                 relpath, 
-                df_query_cities['scraping_targets']
+                inplace=True,
                 )
             df_query_cities.to_csv(wd + 'data/raw/tripadvisor_query_cities.csv', index=False)
         else:
@@ -637,14 +637,6 @@ def scrape_target_info(df_query_cities, cities_to_be_scraped):
     for c, city in enumerate(cities_to_be_scraped, start=1):
 
         print(city)
-
-        # add PENDING status to status file
-        df_query_cities['scraped'] = np.where(
-            df_query_cities['city'] == city, 
-            'PENDING', 
-            df_query_cities['scraped']
-            )
-        df_query_cities.to_csv(wd + 'data/raw/tripadvisor_query_cities.csv', index=False)
 
         # get restaurant links from target list file per city (check if already scraped)
         relpath_query_restaurants = df_query_cities[
@@ -784,18 +776,19 @@ def scrape_target_info(df_query_cities, cities_to_be_scraped):
                 break
             else:
                 # save under temp (will be deleted after dataset is complete for city)
+                # data can be feather instead of CSV
                 relpath_results_restaurants = (
                     'data/temp/tripadvisor_results_restaurant_' 
                     + file_suffix_from_city_name(city) + '_'
-                    + target_id + '.csv'
+                    + target_id + '.feather'
                     )
-                df.to_csv(wd + relpath_results_restaurants, index=False)
+                df.reset_index().to_feather(wd + relpath_results_restaurants)
                 print('\n │  └─ Dataframe saved: ' + relpath_results_restaurants)
                 # add path to restaurant query file
-                df_query_restaurants['scraped'] = np.where(
+                df_query_restaurants['scraped'].mask(
                     df_query_restaurants['id'] == target_id, 
                     relpath_results_restaurants, 
-                    df_query_restaurants['scraped']
+                    inplace=True
                     )
                 df_query_restaurants.to_csv(wd + relpath_query_restaurants, index=False)
 
@@ -804,7 +797,7 @@ def scrape_target_info(df_query_cities, cities_to_be_scraped):
 
             # append
             for r, relpath_results_restaurants in enumerate(df_query_restaurants['scraped'], start=1):
-                df_restaurant = pd.read_csv(wd + relpath_results_restaurants)
+                df_restaurant = pd.read_feather(wd + relpath_results_restaurants)
                 if (r==1):
                     df_results_city = df_restaurant
                 else:
@@ -824,13 +817,22 @@ def scrape_target_info(df_query_cities, cities_to_be_scraped):
                 save_success = False
                 print(' └─ Merged dataset for ' + city + ' could not be saved.')
             if (save_success == True):
+                # delete temp files
                 for relpath_results_restaurants in df_query_restaurants['scraped']:
                     os.remove(wd + relpath_results_restaurants)
+                # replace status in log with link to feather file
+                df_query_restaurants['scraped'].mask(
+                    df_query_cities['city'] == city, 
+                    relpath_results_city + '.feather', 
+                    inplace=True
+                    )
+                df_query_cities.to_csv(wd + 'data/raw/tripadvisor_query_cities.csv', index=False)
         else:
             print(' └─ Scraping results incomplete. Will try again later, continuing for now...')
             continue
     
     # re-init scraper after completion (will exit when everything is scraped)
+    stop
     init_scraper(driver, wait)
 
 
