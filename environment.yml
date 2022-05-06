@@ -7,9 +7,11 @@ dependencies:
   - jupyter # use latest, for interactive use
   - pylint # use latest, for interactive use
   - beautifulsoup4=4.9.*
+  - make=4.*
   - matplotlib=3.3.*
   - numpy=1.19.*
-  - pandas=1.2.*
+  - pandas=1.4.2
+  - pyarrow=7.0.0
   - firefox=99.0.*
   - pip # use latest
   - pip:
