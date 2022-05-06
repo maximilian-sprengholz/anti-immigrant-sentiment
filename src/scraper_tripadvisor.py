@@ -461,11 +461,10 @@ def init_scraper(driver, wait):
     cities_n_old = len(df_query_cities)
     for city in input_cities:
         if (city not in df_query_cities['city'].values): 
-            row = [[city, np.nan, np.nan]]
-            df_query_cities = df_query_cities.append(
-                pd.DataFrame(row, columns = ['city', 'scraping_targets', 'scraped']),
-                ignore_index = True
+            df_query_cities_row = pd.DataFrame(
+                [[city, np.nan, np.nan]], columns = ['city', 'scraping_targets', 'scraped']
                 )
+            df_query_cities = pd.concat([df_query_cities, df_query_cities_row])
     df_query_cities.to_csv(wd + 'data/raw/tripadvisor_query_cities.csv', index=False)
     cities_n_delta = len(df_query_cities) - cities_n_old
     if (cities_n_delta > 0):
