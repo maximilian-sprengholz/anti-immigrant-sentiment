@@ -8,7 +8,7 @@ We measure anti-immigrant sentiment in Germany expressed in online reviews of im
 
 __Tripadvisor (restaurants)__:
 - [x] Scraper written
-- [x] Scraper testing (5 sample municipalities): 2/5 municipalities scraped
+- [x] Scraper testing: 2/5 municipalities scraped
 - [ ] Scraper running
 
 __Google Maps (restaurants, places of worship, grocery stores)__:
@@ -54,10 +54,10 @@ conda activate ./env
 # check if environment is active and python is in it
 make checksetup
 # start crawler
-make crawl_tripadvisor
-make crawl_googlemaps
+#make scrape_tripadvisor
+#make scrape_googlemaps
 # run analysis and make docs
-make all
+#make all
 ```
 
 ## License
