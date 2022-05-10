@@ -3,7 +3,7 @@
 '''
 
 This file scrapes Tripadvisor review information 
-for restaurants in German cities.
+for restaurants in German municipalities.
 
 '''
 
@@ -13,6 +13,7 @@ import sys
 import subprocess
 import re
 from pathlib import Path
+from ast import literal_eval
 import math
 import numpy as np
 import pandas as pd
@@ -20,7 +21,6 @@ from time import sleep
 from datetime import datetime
 
 from selenium import webdriver
-# from selenium import JavascriptExecutor
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
@@ -45,7 +45,7 @@ sys.path.append(wd + 'src')
 # selenium options
 options = webdriver.FirefoxOptions()
 options.set_preference('intl.accept_languages', 'de-DE, de')
-#options.headless = True
+options.headless = True
 #options.binary_location = wd + 'env/Library/bin/firefox.exe' # activate
 
 
@@ -76,7 +76,7 @@ def run_shell_command(command=str, wd=wd):
 
 def track_status_in_readme(count=int, total=int):
     # pushes the current scraping status to the repo README
-    # replaces '0/0 cities' scraped (cities unique to Tripadvisor)
+    # replaces '0/0 municipalities' scraped (municipalities unique to Tripadvisor)
     returncode = 0
     while (returncode==0):
         returncode, error = run_shell_command('git fetch -all')
@@ -84,8 +84,8 @@ def track_status_in_readme(count=int, total=int):
         try:
             with open(wd + 'README.md', 'r') as file:
                 filedata = file.read()
-                status_string = str(count) + '/' + str(total) + ' cities'
-                filedata = re.sub(r'[0-9]+/[0-9]+\scities', status_string, filedata)
+                status_string = str(count) + '/' + str(total) + ' municipalities'
+                filedata = re.sub(r'[0-9]+/[0-9]+\smunicipalities', status_string, filedata)
         except IOError:
             return 'README could not be opened.'
         try:
@@ -151,8 +151,8 @@ def switch_to_next_page(page=int):
     except NoSuchElementException:
         return False
 
-def search_for_city(query=str):
-    # search for city, open first result of suggestions
+def search_for_municipality(query=str):
+    # search for municipality, open first result of suggestions
     query = query + ' Deutschland'
     form = wait.until(
         EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.restaurants_home form'))
@@ -169,7 +169,31 @@ def search_for_city(query=str):
             )
         )
 
-def get_restaurant_info_from_results_page(data_dict, city, scraped):
+def check_postcode_match(postcodes):
+    # check if postcode belongs to municipality
+    first_result = wait.until(
+        EC.visibility_of_element_located((By.XPATH, './/div[contains(@data-test,"1_list_item")]'))
+        )
+    link = first_result.find_element(
+        By.XPATH, '(.//a[contains(@href,"Restaurant_Review")])[2]'
+        ).get_attribute('href')
+    # open in new tab, check, switch back
+    original_window = driver.current_window_handle
+    driver.switch_to.new_window('tab')
+    driver.get(link)
+    postcode = driver.find_element(
+                By.XPATH, './/a[contains(@href,"#MAPVIEW")]'
+                ).text.split(', ', 1)
+    postcode = re.sub(r'[^\d]+', '', postcode[1])
+    if (postcode in postcodes):
+        postcode_match = True
+    else:
+        postcode_match = False
+    driver.close()
+    driver.switch_to.window(original_window)
+    return(postcode_match)
+
+def get_restaurant_info_from_results_page(data_dict, municipality, ags, postcodes, scraped):
     wait.until(
         EC.visibility_of_element_located((By.XPATH, './/div[contains(@data-test,"1_list_item")]'))
         )
@@ -188,7 +212,8 @@ def get_restaurant_info_from_results_page(data_dict, city, scraped):
             data_dict['name'].append(re.sub(r'[0-9]+\.\s', '', link.text))
             data_dict['url'].append(link.get_attribute('href'))
             data_dict['timestamp'].append(datetime.now().strftime('%Y-%m-%d, %H:%M:%S'))
-            data_dict['city'].append(city)
+            data_dict['municipality'].append(municipality)
+            data_dict['ags'].append(ags)
             id_string = link.get_attribute('href').split('-', 3)
             data_dict['id'].append(id_string[1] + id_string[2])
             data_dict['scraped'].append(scraped)
@@ -200,8 +225,8 @@ def get_restaurant_info_from_results_page(data_dict, city, scraped):
                 break
     return continue_scrape
 
-def file_suffix_from_city_name(city_string):
-    # replaces German umlaute, strips spaces, returns lowercase string
+def file_suffix_from_municipality_name(municipality_string):
+    # replaces German umlaute, strips spaces and /, returns lowercase string
     umlaute_dict = {
         'ä': 'ae', 
         'ö': 'oe',
@@ -212,9 +237,9 @@ def file_suffix_from_city_name(city_string):
         'ß': 'ss',
         }
     for k in umlaute_dict.keys():
-        city_string = city_string.replace(k, umlaute_dict[k])
-    city_suffix = city_string.replace(' ', '').lower()
-    return city_suffix
+        municipality_string = municipality_string.replace(k, umlaute_dict[k]).lower()
+    municipality_suffix = municipality_string.replace(' ', '').replace('.', '').replace('/', '')
+    return municipality_suffix
 
 def get_review_languages():
     try:
@@ -285,7 +310,7 @@ def fetch_data_attribute(element, attr, fallback):
             value = element.find_element(
                 By.XPATH, './/a[contains(@href,"#MAPVIEW")]'
                 ).text.split(', ', 1)
-            value = int(re.sub(r'[^\d]+', '', value[1]))
+            value = re.sub(r'[^\d]+', '', value[1])
         elif (attr == 'cuisine1'):
             value = element.find_element(
                 By.XPATH, './/div[contains(text(), "KÜCHEN")]/following-sibling::div'
@@ -347,7 +372,7 @@ def fetch_data_attribute(element, attr, fallback):
                     value = np.nan
             else:
                 value = np.nan
-        elif (attr == 'review_user_city'):
+        elif (attr == 'review_user_municipality'):
             if (fallback==0):
                 value = element.find_element(
                     By.XPATH, 
@@ -401,7 +426,7 @@ def fetch_data_attribute(element, attr, fallback):
                 value = int(re.sub(r'[^\d]+', '', value))
             else:
                 value=np.nan
-        elif (attr == 'review_user_cities_visited'):
+        elif (attr == 'review_user_municipalities_visited'):
             if (fallback==0):
                 value = element.find_element(
                     By.XPATH, 
@@ -439,67 +464,138 @@ def fetch_data_attribute(element, attr, fallback):
 def init_scraper(driver, wait):
     '''
     Checks for the current scraping status and initializes the scraper for the information we miss.
-    Keep tabs in the city query log (tripadvisor_query_cities.csv) and the restaurant query log for
-    each city (tripadvisor_query_restaurants_CITYNAME.csv).
+    Keep tabs in the municipality query log (tripadvisor_query_municipalities.csv) and the 
+    restaurant query log for each municipality (tripadvisor_query_restaurants_MUNICIPALITY.csv).
 
-    (1) Check if city list has changed in user input.
-    (2) Check if restaurant scraping targets have been collected for each city.
-    (3) Check if restaurant info and reviews have been scraped for each city/restaurant.
+    (1) Check if municipality list has changed in user input.
+    (2) Check if restaurant scraping targets have been collected for each municipality.
+    (3) Check if restaurant info and reviews have been scraped for each municipality/restaurant.
     '''
     print('')
     print('Checking Tripadvisor scraping status:')
     print('-------------------------------------')
 
-    # initiate city query log
+    # initiate municipality query log
     try:
-        df_query_cities = pd.read_csv(wd + 'data/raw/tripadvisor_query_cities.csv')
+        df_query_municipalities = pd.read_csv(
+            wd + 'data/raw/tripadvisor_query_municipalities.csv',
+            sep=";",
+            dtype={'ags': object}
+            )
     except FileNotFoundError:
-        df_query_cities = pd.DataFrame(columns = ['city', 'scraping_targets', 'scraped'])
+        df_query_municipalities = pd.DataFrame(
+            columns=['ags', 'municipality', 'state', 'postcodes', 'querystring', 
+                     'scraping_targets', 'scraped']
+            )
     
-    # (1) update city list from user input
-    input_cities = pd.read_csv(wd + 'data/raw/tripadvisor_input_cities.csv', header=None)[0]
-    cities_n_old = len(df_query_cities)
-    for city in input_cities:
-        if (city not in df_query_cities['city'].values): 
-            df_query_cities_row = pd.DataFrame(
-                [[city, np.nan, np.nan]], columns = ['city', 'scraping_targets', 'scraped']
+    # (1) update municipality list from user input
+    # We ensure uniqueness via the ags code (Amtlicher Gemeinseschlüssel)
+    df_input_municipalities = pd.read_csv(
+        wd + 'data/raw/tripadvisor_input_municipalities.csv',
+        sep=";",
+        converters={'postcodes': literal_eval},
+        dtype={'ags': object}
+        )
+    municipalities_added = 0
+    querystrings_changed_user = 0
+    querystrings_changed_postcode_flag = 0
+    for municipality, ags, postcodes, state, querystring in zip(
+            df_input_municipalities['municipality'],
+            df_input_municipalities['ags'],
+            df_input_municipalities['postcodes'],
+            df_input_municipalities['state'],
+            df_input_municipalities['querystring']
+            ):
+        # add new municipalities
+        if (ags not in df_query_municipalities['ags'].values):
+            municipalities_added = municipalities_added + 1
+            if (pd.isnull(querystring)):
+                querystring = municipality + ' ' + state # default query string
+            df_query_municipalities_row = pd.DataFrame(
+                [[ags, municipality, state, postcodes, querystring, np.nan, np.nan]], 
+                columns=['ags', 'municipality', 'state', 'postcodes', 'querystring', 
+                           'scraping_targets', 'scraped']
                 )
-            df_query_cities = pd.concat([df_query_cities, df_query_cities_row])
-    df_query_cities.to_csv(wd + 'data/raw/tripadvisor_query_cities.csv', index=False)
-    cities_n_delta = len(df_query_cities) - cities_n_old
-    if (cities_n_delta > 0):
-        print(str(cities_n_delta) + ' cities added to city query list.')
+            df_query_municipalities = pd.concat(
+                [df_query_municipalities, df_query_municipalities_row], 
+                ignore_index=True
+                )
+        # change default querystring value to user provided string (querystring is unique)
+        # querystring is np.nan if postcode check returned false in get_scraping_targets()
+        if ((querystring not in df_query_municipalities['querystring'].values)
+                & (~pd.isnull(querystring))):
+            querystrings_changed_user = querystrings_changed_user + 1
+            df_query_municipalities['querystring'].mask(
+                    df_query_municipalities['ags'] == ags, 
+                    querystring, 
+                    inplace=True
+                    )
+        elif (pd.isnull(querystring)):
+            querystrings_changed_postcode_flag = querystrings_changed_postcode_flag + 1
+            df_query_municipalities['querystring'].mask(
+                df_query_municipalities['ags'] == ags, 
+                querystring, 
+                inplace=True
+                )
+    # replace query log file and print status
+    df_query_municipalities.to_csv(
+        wd + 'data/raw/tripadvisor_query_municipalities.csv', sep=";", index=False
+        )
+    if ((municipalities_added > 0) 
+            | (querystrings_changed_user > 0) 
+            | (querystrings_changed_postcode_flag > 0)):
+        print(str(municipalities_added) + ' municipalities added to municipality query list.')
+        print(str(querystrings_changed_user) + ' query strings changed to user provided values.')
+        print(str(querystrings_changed_postcode_flag) 
+              + ' query strings set to missing after postcode consistency check.')
     else:
-        print('City query list up to date.')
+        print('Municipality query list up to date.')
 
-    # (2) Get list of cities for which scraping targets are missing
-    cities_to_be_scraped = df_query_cities[
-        (df_query_cities['scraping_targets'].isin([np.nan]))
-        ]['city']
-    if (len(cities_to_be_scraped) > 0):
-        print('Scraping target list missing for ' + str(len(cities_to_be_scraped)) + ' cities.')
-        get_scraping_targets(df_query_cities, cities_to_be_scraped)
+    # (2) Get list of municipalities for which we have a querystring but no scraping targets yet
+    municipalities_to_be_scraped = df_query_municipalities[
+        (df_query_municipalities['scraping_targets'].isin([np.nan]))
+        & (~df_query_municipalities['querystring'].isin([np.nan]))
+        ][['municipality', 'ags', 'postcodes', 'querystring']]
+    if (len(municipalities_to_be_scraped) > 0):
+        print('Scraping target list missing for ' + str(len(municipalities_to_be_scraped)) 
+              + ' municipalities.')
+        get_scraping_targets(
+            df_input_municipalities, 
+            df_query_municipalities, 
+            municipalities_to_be_scraped
+            )
     else:
-        print('Scraping target list available for each city.')
+        print('Scraping target list available for each municipality.')
  
-    # (3) Get list of cities with no/incomplete scraping of restaurant info/reviews
-    cities_to_be_scraped = df_query_cities[
-        (~df_query_cities['scraping_targets'].isin([np.nan]))
-        & df_query_cities['scraped'].isin([np.nan])
-        ]['city']
-    if (len(cities_to_be_scraped) > 0):
-        print('Restaurant info/reviews missing for ' + str(len(cities_to_be_scraped)) + ' cities.')
-        scrape_target_info(df_query_cities, cities_to_be_scraped)
+    # (3) Get list of municipalities with no/incomplete scraping of restaurant info/reviews
+    municipalities_to_be_scraped = df_query_municipalities[
+        (~df_query_municipalities['scraping_targets'].isin([np.nan]))
+        & df_query_municipalities['scraped'].isin([np.nan])
+        ][['municipality', 'ags', 'scraping_targets']]
+    if (len(municipalities_to_be_scraped) > 0):
+        print('Restaurant info/reviews missing for ' + str(len(municipalities_to_be_scraped)) 
+              + ' municipalities.')
+        scrape_target_info(
+            df_query_municipalities, 
+            municipalities_to_be_scraped
+            )
     else:
-        sys.exit('Information has been scraped for all cities and restaurants. Exiting...')
+        sys.exit('Information has been scraped for all municipalities and restaurants. Exiting...')
 
-def get_scraping_targets(df_query_cities, cities_to_be_scraped):
+def get_scraping_targets(
+        df_input_municipalities, df_query_municipalities, municipalities_to_be_scraped
+        ):
     '''
-    Fetch all restaurants per city, save:
-    - city
+    Fetch all restaurants per municipality, save:
+    - municipality
+    - ags
+    - postcodes (used to check if results are really in searched-for municipality)
+    - query string
     - restaurant names
     - restaurant urls (direct links)
+    - restaurant id
     - timestamp
+    - scraped: intitally empty, holds the link of the final dataset per municipality
     '''
     print('')
     print('Scraping target lists:')
@@ -507,7 +603,8 @@ def get_scraping_targets(df_query_cities, cities_to_be_scraped):
     
     # data structure
     data = {
-        'city': [],
+        'municipality': [],
+        'ags': [],
         'name': [],
         'url': [],
         'id': [],
@@ -515,13 +612,18 @@ def get_scraping_targets(df_query_cities, cities_to_be_scraped):
         'scraped': []
     }
 
-    ### loop over cities
-    for c, city in enumerate(cities_to_be_scraped, start=1):
+    ### loop over municipalities
+    for municipality, ags, postcodes, querystring in zip(
+            municipalities_to_be_scraped['municipality'],
+            municipalities_to_be_scraped['ags'],
+            municipalities_to_be_scraped['postcodes'],
+            municipalities_to_be_scraped['querystring']
+            ):
 
-        # get restaurant page and search for city
+        # get restaurant page and search for municipality
         driver.get('https://www.tripadvisor.de/Restaurants')
         accept_cookies()
-        search_for_city(city)
+        search_for_municipality(querystring)
 
         # opt-out geo search radius broadening
         try:
@@ -529,6 +631,19 @@ def get_scraping_targets(df_query_cities, cities_to_be_scraped):
             sleep(3)
         except (NoSuchElementException, ElementNotInteractableException):
             pass
+
+        # check if postcode of first search result corresponds to the searched-for municipality
+        # if not: set to missing in log (requires manual determination of search strings)
+        if (check_postcode_match(postcodes) == False):
+            df_input_municipalities['querystring'].mask(
+                df_query_municipalities['ags'] == ags, 
+                np.nan, 
+                inplace=True
+                )
+            print(ags + ' ' + municipality 
+                  + ': Skipped. Query did not return results with matching postcodes. '
+                  + 'Please provide correct querystrings manually.')
+            continue
         
         # start clean
         for value in data.values():
@@ -538,7 +653,8 @@ def get_scraping_targets(df_query_cities, cities_to_be_scraped):
         for page in range(1,1000):
             # fetch and save result info from page
             results = get_restaurant_info_from_results_page(
-                data_dict=data, city=city, scraped=np.nan
+                data_dict=data, municipality=municipality, ags=ags, postcodes=postcodes, 
+                scraped=np.nan
                 )
             if (results == True):
                 # switch to next page until depleted
@@ -556,32 +672,34 @@ def get_scraping_targets(df_query_cities, cities_to_be_scraped):
         if ((len(df)!=0) & (missings <= len(df))):
             relpath = (
                 'data/raw/tripadvisor_query_restaurants_' 
-                + file_suffix_from_city_name(city) + '.csv'
+                + file_suffix_from_municipality_name(municipality) + '_' + ags + '.csv'
                 )
-            df.to_csv(wd + relpath, index=False)
-            print('(' + str(c) + ') ' + city + ': ' + str(len(df)) 
+            df.to_csv(wd + relpath, sep = ";", index=False)
+            print(ags + ' ' + municipality + ': ' + str(len(df)) 
                 + ' restaurants saved in scraping target list.')
             # add path to status file
-            df_query_cities['scraping_targets'].mask(
-                df_query_cities['city'] == city, 
+            df_query_municipalities['scraping_targets'].mask(
+                df_query_municipalities['ags'] == ags, 
                 relpath, 
                 inplace=True,
                 )
-            df_query_cities.to_csv(wd + 'data/raw/tripadvisor_query_cities.csv', index=False)
+            df_query_municipalities.to_csv(
+                wd + 'data/raw/tripadvisor_query_municipalities.csv', sep=";", index=False
+                )
         else:
-            print('(' + str(c) + ') ' + city + ': No scraping list saved due to ' 
+            print(ags + ' ' + municipality + ': No scraping list saved due to ' 
                 + str(missings) + ' missings / ' + str(len(df)) + ' rows in dataframe.')
             break
 
     # re-init scraper after completion (will continue with target info when all targets scraped)
     init_scraper(driver, wait)
 
-def scrape_target_info(df_query_cities, cities_to_be_scraped):
+def scrape_target_info(df_query_municipalities, municipalities_to_be_scraped):
     '''
-    City-by-city:
+    municipality-by-municipality:
     - Scrape restaurant info and reviews for each target (keep track)
     - Save dataset for each target
-    - Merge datasets for all targets and save city dataset (keep track)
+    - Merge datasets for all targets and save municipality dataset (keep track)
     '''
     print('')
     print('Scraping restaurant info/reviews:')
@@ -594,7 +712,8 @@ def scrape_target_info(df_query_cities, cities_to_be_scraped):
         'url': [],
         'street_w_no': [],
         'postcode': [],
-        'city': [],
+        'municipality': [],
+        'ags': [],
         'cuisine1': [],
         'cuisine2': [],
         'cuisine3': [],
@@ -603,12 +722,12 @@ def scrape_target_info(df_query_cities, cities_to_be_scraped):
         'review_user_name': [],
         'review_user_gender': [],
         'review_user_age': [],
-        'review_user_city': [],
+        'review_user_municipality': [],
         'review_user_country': [],
         'review_user_signup': [],
         'review_user_reviews': [],
         'review_user_thumbsup': [],
-        'review_user_cities_visited': [],
+        'review_user_municipalities_visited': [],
         'review_user_overlay_failed': [],
         'review_user_id': [],
         'review_date': [],
@@ -620,30 +739,31 @@ def scrape_target_info(df_query_cities, cities_to_be_scraped):
         'timestamp': [],
         }
     attributes_restaurant = [
-        'id', 'name', 'url', 'street_w_no', 'postcode', 'city', 'cuisine1', 'cuisine2', 'cuisine3',
-        'pricerange_lo', 'pricerange_hi'
+        'id', 'name', 'url', 'street_w_no', 'postcode', 'municipality', 'ags', 'cuisine1', 
+        'cuisine2', 'cuisine3', 'pricerange_lo', 'pricerange_hi'
         ]
     attributes_user_overlay = [
-        'review_user_name', 'review_user_gender', 'review_user_age', 'review_user_city', 
+        'review_user_name', 'review_user_gender', 'review_user_age', 'review_user_municipality', 
         'review_user_country', 'review_user_signup', 'review_user_reviews', 'review_user_thumbsup', 
-        'review_user_cities_visited', 'review_user_overlay_failed' 
+        'review_user_municipalities_visited', 'review_user_overlay_failed' 
         ]
     attributes_review = [
         'review_user_id', 'review_date', 'review_score', 'review_title', 'review_text', 
         'review_language', 'review_id', 'timestamp'
         ]
 
-    ### loop over cities
-    for c, city in enumerate(cities_to_be_scraped, start=1):
+    ### loop over municipalities
+    for c, (municipality, ags, relpath_query_restaurants) in enumerate(zip(
+                municipalities_to_be_scraped['municipality'], 
+                municipalities_to_be_scraped['ags'],
+                municipalities_to_be_scraped['scraping_targets']
+                ),
+            start=1):
 
-        print(city)
+        print(ags + municipality)
 
-        # get restaurant links from target list file per city (check if already scraped)
-        relpath_query_restaurants = df_query_cities[
-            df_query_cities['city'] == city
-            ]['scraping_targets']
-        relpath_query_restaurants = relpath_query_restaurants.values[0]
-        df_query_restaurants = pd.read_csv(wd + relpath_query_restaurants)
+        # get restaurant links from target list file per municipality (check if already scraped)
+        df_query_restaurants = pd.read_csv(wd + relpath_query_restaurants, sep=";")
         targets = df_query_restaurants[
             df_query_restaurants['scraped'].isin([np.nan])
             ]
@@ -663,8 +783,10 @@ def scrape_target_info(df_query_cities, cities_to_be_scraped):
 
             # get restaurant data
             for attr in attributes_restaurant:
-                if (attr == 'city'):
-                    data[attr].append(city)
+                if (attr == 'municipality'):
+                    data[attr].append(municipality)
+                elif (attr == 'ags'):
+                    data[attr].append(ags)
                 elif (attr == 'id'):
                     data[attr].append(target_id)
                 elif (attr == 'name'):
@@ -723,8 +845,9 @@ def scrape_target_info(df_query_cities, cities_to_be_scraped):
                                     element=overlay, attr=attr, fallback=0
                                     ))
                             close_overlays(driver) 
-                        except TimeoutException:
+                        except (NoSuchElementException, TimeoutException):
                             # if user overlay fails, get user info set already visible
+                            # can fail due to missing user info (e.g. deleted acc) or timeout
                             for attr in attributes_user_overlay:
                                 data[attr].append(fetch_data_attribute(
                                     element=rev, attr=attr, fallback=1
@@ -775,12 +898,12 @@ def scrape_target_info(df_query_cities, cities_to_be_scraped):
                     )
                 break
             else:
-                # save under temp (will be deleted after dataset is complete for city)
+                # save under temp (will be deleted after dataset is complete for municipality)
                 # data can be feather instead of CSV
                 relpath_results_restaurants = (
                     'data/temp/tripadvisor_results_restaurant_' 
-                    + file_suffix_from_city_name(city) + '_'
-                    + target_id + '.feather'
+                    + file_suffix_from_municipality_name(municipality)
+                    + '_' + ags + '_'+ target_id + '.feather'
                     )
                 df.reset_index().to_feather(wd + relpath_results_restaurants)
                 print('\n │  └─ Dataframe saved: ' + relpath_results_restaurants)
@@ -790,49 +913,56 @@ def scrape_target_info(df_query_cities, cities_to_be_scraped):
                     relpath_results_restaurants, 
                     inplace=True
                     )
-                df_query_restaurants.to_csv(wd + relpath_query_restaurants, index=False)
+                df_query_restaurants.to_csv(wd + relpath_query_restaurants, sep=";", index=False)
 
-        ### combine all restaurant datasets per city and save ONLY when everything is complete
+        ### combine restaurant datasets per municipality and save ONLY when everything is complete
         if (df_query_restaurants['scraped'].isnull().sum()==0):
 
             # append
-            for r, relpath_results_restaurants in enumerate(df_query_restaurants['scraped'], start=1):
+            for r, relpath_results_restaurants in enumerate(df_query_restaurants['scraped']):
                 df_restaurant = pd.read_feather(wd + relpath_results_restaurants)
-                if (r==1):
-                    df_results_city = df_restaurant
+                if (r==0):
+                    df_results_municipality = df_restaurant
                 else:
-                    df_results_city = pd.concat([df_results_city, df_restaurant])
+                    df_results_municipality = pd.concat(
+                        [df_results_municipality, df_restaurant], 
+                        ignore_index=True
+                        )
             
             # save feather and delete delete restaurant result spreadsheets when successful
             try:
-                relpath_results_city = (
+                relpath_results_municipality = (
                     'data/raw/tripdavisor_results_' 
-                    + file_suffix_from_city_name(city)
+                    + file_suffix_from_municipality_name(municipality)
+                    + '_' + ags + '.feather'
                     )
-                df_results_city.reset_index().to_feather(wd + relpath_results_city + '.feather')
+                df_results_municipality.reset_index().to_feather(
+                    wd + relpath_results_municipality
+                    )
                 save_success = True
-                print(' ├─ Merged dataset saved: ' + relpath_results_city + '.feather')
-                print(' └─ ' + track_status_in_readme(c, len(df_query_cities)))
+                print(' ├─ Merged dataset saved: ' + relpath_results_municipality)
+                print(' └─ ' + track_status_in_readme(c, len(df_query_municipalities)))
             except Exception:
                 save_success = False
-                print(' └─ Merged dataset for ' + city + ' could not be saved.')
+                print(' └─ Merged dataset for ' + municipality + ' could not be saved.')
             if (save_success == True):
                 # delete temp files
                 for relpath_results_restaurants in df_query_restaurants['scraped']:
                     os.remove(wd + relpath_results_restaurants)
-                # replace status in log with link to feather file
-                df_query_restaurants['scraped'].mask(
-                    df_query_cities['city'] == city, 
-                    relpath_results_city + '.feather', 
+                # replace status in log files with link to feather file
+                df_query_municipalities['scraped'].mask(
+                    df_query_municipalities['ags'] == ags, 
+                    relpath_results_municipality, 
                     inplace=True
                     )
-                df_query_cities.to_csv(wd + 'data/raw/tripadvisor_query_cities.csv', index=False)
+                df_query_municipalities.to_csv(
+                    wd + 'data/raw/tripadvisor_query_municipalities.csv', sep=";", index=False
+                    )
         else:
-            print(' └─ Scraping results incomplete. Will try again later, continuing for now...')
+            print(' └─ Scraping results incomplete. Re-try next iteration, continuing for now...')
             continue
     
     # re-init scraper after completion (will exit when everything is scraped)
-    stop
     init_scraper(driver, wait)
 
 

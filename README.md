@@ -8,7 +8,7 @@ We measure anti-immigrant sentiment in Germany expressed in online reviews of im
 
 __Tripadvisor (restaurants)__:
 - [x] Scraper written
-- [x] Scraper testing (5 sample cities): 2/5 cities scraped
+- [x] Scraper testing (5 sample municipalities): 2/5 municipalities scraped
 - [ ] Scraper running
 
 __Google Maps (restaurants, places of worship, grocery stores)__:

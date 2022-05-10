@@ -25900,3 +25900,72 @@ JavaScript error: , line 0: NotFoundError: Could not move source file(C:\Users\A
 1651822064583	Marionette	INFO	Stopped listening on port 56949
 console.warn: TopSitesFeed: Failed to fetch data from Contile server: NetworkError when attempting to fetch resource.
 JavaScript error: chrome://remote/content/marionette/cert.js, line 55: NS_ERROR_NOT_AVAILABLE: Component returned failure code: 0x80040111 (NS_ERROR_NOT_AVAILABLE) [nsICertOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData]
+1652113431217	geckodriver	INFO	Listening on 127.0.0.1:55762
+1652113433223	mozrunner::runner	INFO	Running command: "C:\\Program Files\\Mozilla Firefox\\firefox.exe" "--marionette" "-headless" "--remote-debugging-port" "55763" "--remote-allow-hosts" "localhost" "-no-remote" "-profile" "C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofilePvswGe"
+*** You are running in headless mode.
+console.error: GPOParser.jsm: 
+  Unable to parse JSON for ExtensionSettings
+console.error: Enterprise Policies: 
+  Policy SearchEngines is only allowed on ESR
+1652113434244	Marionette	INFO	Marionette enabled
+console.error: Policies.jsm: 
+  OfferToSaveLoginsDefault ignored because OfferToSaveLogins is present.
+[GFX1-]: RenderCompositorSWGL failed mapping default framebuffer, no dt
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofilePvswGe\\search.json.mozlz4", (void 0)))
+DevTools listening on ws://localhost:55763/devtools/browser/e048a440-edee-4e6c-909d-d9246b029f66
+1652113438034	Marionette	INFO	Listening on port 55828
+Read port: 55828
+1652113438137	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+JavaScript error: , line 0: NS_ERROR_NOT_AVAILABLE
+JavaScript error: , line 0: NotFoundError: Could not move source file(C:\Users\ADMIN~1.SPR\AppData\Local\Temp\rust_mozprofilePvswGe\bookmarkbackups\bookmarks-2022-05-09.jsonlz4) because it does not exist
+t" "-no-remote" "-profile" "C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofileweaTad"
+*** You are running in headless mode.
+console.error: GPOParser.jsm: 
+  Unable to parse JSON for ExtensionSettings
+console.error: Enterprise Policies: 
+  Policy SearchEngines is only allowed on ESR
+1652113673984	Marionette	INFO	Marionette enabled
+console.error: Policies.jsm: 
+  OfferToSaveLoginsDefault ignored because OfferToSaveLogins is present.
+[GFX1-]: RenderCompositorSWGL failed mapping default framebuffer, no dt
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofileweaTad\\search.json.mozlz4", (void 0)))
+DevTools listening on ws://localhost:56957/devtools/browser/d8c1c979-53fe-44c9-b900-cb417bbb5f3e
+1652113677285	Marionette	INFO	Listening on port 57020
+Read port: 57020
+1652113677437	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+JavaScript error: , line 0: NS_ERROR_NOT_AVAILABLE
+1:57466
+1652113768307	mozrunner::runner	INFO	Running command: "C:\\Program Files\\Mozilla Firefox\\firefox.exe" "--marionette" "-headless" "--remote-debugging-port" "57467" "--remote-allow-hosts" "localhost" "-no-remote" "-profile" "C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofile7JSjfu"
+*** You are running in headless mode.
+console.error: GPOParser.jsm: 
+  Unable to parse JSON for ExtensionSettings
+console.error: Enterprise Policies: 
+  Policy SearchEngines is only allowed on ESR
+1652113769460	Marionette	INFO	Marionette enabled
+console.error: Policies.jsm: 
+  OfferToSaveLoginsDefault ignored because OfferToSaveLogins is present.
+[GFX1-]: RenderCompositorSWGL failed mapping default framebuffer, no dt
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofile7JSjfu\\search.json.mozlz4", (void 0)))
+DevTools listening on ws://localhost:57467/devtools/browser/831c310d-8a89-483c-a9ef-20fce38bd0d7
+1652113772558	Marionette	INFO	Listening on port 57525
+Read port: 57525
+1652113772720	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+JavaScript error: , line 0: NS_ERROR_NOT_AVAILABLE
+1:57794
+1652113818988	mozrunner::runner	INFO	Running command: "C:\\Program Files\\Mozilla Firefox\\firefox.exe" "--marionette" "-headless" "--remote-debugging-port" "57795" "--remote-allow-hosts" "localhost" "-no-remote" "-profile" "C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofilehaLK71"
+*** You are running in headless mode.
+console.error: GPOParser.jsm: 
+  Unable to parse JSON for ExtensionSettings
+console.error: Enterprise Policies: 
+  Policy SearchEngines is only allowed on ESR
+1652113819775	Marionette	INFO	Marionette enabled
+console.error: Policies.jsm: 
+  OfferToSaveLoginsDefault ignored because OfferToSaveLogins is present.
+[GFX1-]: RenderCompositorSWGL failed mapping default framebuffer, no dt
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofilehaLK71\\search.json.mozlz4", (void 0)))
+JavaScript error: resource://gre/modules/ExtensionContent.jsm, line 574: TypeError: PrecompiledScript.executeInGlobal: Argument 1 is not an object.
+DevTools listening on ws://localhost:57795/devtools/browser/e440c70d-b5fb-46e3-89c7-2b9246ff80c7
+1652113823152	Marionette	INFO	Listening on port 57852
+Read port: 57852
+1652113823267	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+JavaScript error: , line 0: NS_ERROR_NOT_AVAILABLE
