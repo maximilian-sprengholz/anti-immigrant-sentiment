@@ -17,8 +17,12 @@ from ast import literal_eval
 import math
 import numpy as np
 import pandas as pd
-from time import sleep
+from pandas.api.types import union_categoricals
+import time
 from datetime import datetime
+import colorama
+from colorama import Fore
+from colorama import Style
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -29,6 +33,8 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.common.exceptions import ElementNotInteractableException
+from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import InvalidSessionIdException
 from selenium.webdriver.firefox.service import Service
 from webdriver_manager.firefox import GeckoDriverManager
 
@@ -48,6 +54,8 @@ options.set_preference('intl.accept_languages', 'de-DE, de')
 options.headless = True
 #options.binary_location = wd + 'env/Library/bin/firefox.exe' # activate
 
+# init colorama (enable colored terminal printing)
+colorama.init()
 
 ##### FUNCTIONS #####
 
@@ -102,6 +110,28 @@ def track_status_in_readme(count=int, total=int):
     else:
         return 'Scraping status successfully tracked.'
 
+def concat_dfs_with_cat_data(dfs):
+    '''
+    Concatenate dataframe but keep categorical dtypes.
+    Credit: https://stackoverflow.com/a/57809778
+    '''
+    # Iterate on categorical columns common to all dfs
+    for col in set.intersection(
+            *[
+                set(df.select_dtypes(include='category').columns)
+                for df in dfs
+            ]
+            ):
+        # Generate the union category across dfs for this column
+        # exclude columns with only NaN, the float64 dtype differs from object
+        cols = [df[col] for df in dfs if df[col].isnull().all()==False]
+        if len(cols)>0:
+            uc = union_categoricals(cols)
+            # Change to union category for all dataframes
+            for df in dfs:
+                df[col] = pd.Categorical(df[col].values, categories=uc.categories)
+    return pd.concat(dfs, ignore_index=True)
+
 def accept_cookies():
     # accept cookies when prompted
     try:
@@ -146,7 +176,7 @@ def switch_to_next_page(page=int):
             + str(page+1) + '")]'
             )
         driver.execute_script('arguments[0].click();', pagelink)
-        sleep(2)
+        time.sleep(1)
         return True
     except NoSuchElementException:
         return False
@@ -204,6 +234,7 @@ def get_restaurant_info_from_results_page(data_dict, municipality, ags, postcode
     res_skipped = 0 # counter for restaurants with no reviews, breaks loop if 3 in a row
     for res in res_list:
         # check if reviews exist (otherwise do not bother to save)
+        continue_scrape = True
         try:
             res.find_element(By.XPATH, './/a[contains(@href, "#REVIEWS")]')
             link = res.find_element(
@@ -217,7 +248,6 @@ def get_restaurant_info_from_results_page(data_dict, municipality, ags, postcode
             id_string = link.get_attribute('href').split('-', 3)
             data_dict['id'].append(id_string[1] + id_string[2])
             data_dict['scraped'].append(scraped)
-            continue_scrape = True
         except NoSuchElementException:
             res_skipped = res_skipped + 1
             if (res_skipped > 2):
@@ -253,7 +283,7 @@ def get_review_languages():
             )
         inputtype = 'overlay'
         close_overlays(driver)
-        sleep(0.5)
+        time.sleep(0.5)
     except NoSuchElementException:
         # if no language dropdown, use list of radio buttons
         languages = driver.find_elements(
@@ -289,7 +319,7 @@ def set_review_language(inputtype, langno):
         driver.execute_script(
             'arguments[0].click();', languages[langno].find_element(By.CSS_SELECTOR, 'input')
             )
-    sleep(0.5)
+    time.sleep(1)
     return(language)
 
 def fetch_data_attribute(element, attr, fallback):
@@ -489,7 +519,7 @@ def init_scraper(driver, wait):
             )
     
     # (1) update municipality list from user input
-    # We ensure uniqueness via the ags code (Amtlicher Gemeinseschlüssel)
+    # We ensure uniqueness via the ags code (Amtlicher Gemeindeschlüssel)
     df_input_municipalities = pd.read_csv(
         wd + 'data/raw/tripadvisor_input_municipalities.csv',
         sep=";",
@@ -580,7 +610,11 @@ def init_scraper(driver, wait):
             municipalities_to_be_scraped
             )
     else:
-        sys.exit('Information has been scraped for all municipalities and restaurants. Exiting...')
+        print('Total running time: ' + str(time_start - time.perf_counter()))
+        sys.exit(
+            Fore.GREEN 
+            + 'Information has been scraped for all municipalities and restaurants. Exiting...'
+        )
 
 def get_scraping_targets(
         df_input_municipalities, df_query_municipalities, municipalities_to_be_scraped
@@ -589,8 +623,6 @@ def get_scraping_targets(
     Fetch all restaurants per municipality, save:
     - municipality
     - ags
-    - postcodes (used to check if results are really in searched-for municipality)
-    - query string
     - restaurant names
     - restaurant urls (direct links)
     - restaurant id
@@ -628,7 +660,7 @@ def get_scraping_targets(
         # opt-out geo search radius broadening
         try:
             driver.find_element(By.CSS_SELECTOR, 'div#geobroaden_opt_out').click()
-            sleep(3)
+            time.sleep(3)
         except (NoSuchElementException, ElementNotInteractableException):
             pass
 
@@ -640,9 +672,9 @@ def get_scraping_targets(
                 np.nan, 
                 inplace=True
                 )
-            print(ags + ' ' + municipality 
+            print(Fore.YELLOW + ags + ' ' + municipality 
                   + ': Skipped. Query did not return results with matching postcodes. '
-                  + 'Please provide correct querystrings manually.')
+                  + 'Please provide correct querystrings manually.' + Style.RESET_ALL)
             continue
         
         # start clean
@@ -667,7 +699,7 @@ def get_scraping_targets(
         # check for missings (no missings permissible except for 'scraped' column)
         # save CSV
         df = pd.DataFrame.from_dict(data)
-        df = df.drop_duplicates()
+        df.drop_duplicates(subset=['url'], inplace=True)
         missings = df.isnull().sum().sum() # should 
         if ((len(df)!=0) & (missings <= len(df))):
             relpath = (
@@ -675,8 +707,8 @@ def get_scraping_targets(
                 + file_suffix_from_municipality_name(municipality) + '_' + ags + '.csv'
                 )
             df.to_csv(wd + relpath, sep = ";", index=False)
-            print(ags + ' ' + municipality + ': ' + str(len(df)) 
-                + ' restaurants saved in scraping target list.')
+            print(Fore.GREEN + ags + ' ' + municipality + ': ' + str(len(df)) 
+                + ' restaurants saved in scraping target list.' + Style.RESET_ALL)
             # add path to status file
             df_query_municipalities['scraping_targets'].mask(
                 df_query_municipalities['ags'] == ags, 
@@ -687,8 +719,9 @@ def get_scraping_targets(
                 wd + 'data/raw/tripadvisor_query_municipalities.csv', sep=";", index=False
                 )
         else:
-            print(ags + ' ' + municipality + ': No scraping list saved due to ' 
-                + str(missings) + ' missings / ' + str(len(df)) + ' rows in dataframe.')
+            print(Fore.YELLOW + ' ' + municipality + ': No scraping list saved due to ' 
+                + str(missings) + ' missings / ' + str(len(df)) + ' rows in dataframe.'
+                + Style.RESET_ALL)
             break
 
     # re-init scraper after completion (will continue with target info when all targets scraped)
@@ -760,7 +793,7 @@ def scrape_target_info(df_query_municipalities, municipalities_to_be_scraped):
                 ),
             start=1):
 
-        print(ags + municipality)
+        print(ags + ' ' + municipality)
 
         # get restaurant links from target list file per municipality (check if already scraped)
         df_query_restaurants = pd.read_csv(wd + relpath_query_restaurants, sep=";")
@@ -773,7 +806,7 @@ def scrape_target_info(df_query_municipalities, municipalities_to_be_scraped):
                 targets['id'], targets['name'], targets['url']
                 ):
         
-            sleep(3)
+            time.sleep(3) # pause should avoid being blocked
             driver.get(target_link + '#REVIEWS')
             accept_cookies()
             
@@ -803,7 +836,6 @@ def scrape_target_info(df_query_municipalities, municipalities_to_be_scraped):
             for l in range(1, lang_count):
                 language = set_review_language(inputtype=inputtype, langno=l)
                 selected_review_language_end = False # make sure only untranslated reviews count 
-                sleep(2)
                 # extract review info per language (loop over pages)
                 for page in range(1,1000):
                     expand_teaser_text()
@@ -829,7 +861,7 @@ def scrape_target_info(df_query_municipalities, municipalities_to_be_scraped):
                         try:
                             # try to get user info overlay
                             close_overlays(driver)
-                            sleep(1) # allow DOM to adjust
+                            # time.sleep(0.5) # allow DOM to adjust
                             driver.execute_script(
                                 'arguments[0].click();', 
                                 rev.find_element(By.CSS_SELECTOR, 'div.memberOverlayLink.clickable')
@@ -865,7 +897,7 @@ def scrape_target_info(df_query_municipalities, municipalities_to_be_scraped):
                                         ))
                             # print status
                             sys.stdout.write(
-                                '\r ├─ %s: Review languages %i, total reviews %i' 
+                                '\r ├─ %s: Review languages %i, total reviews scraped %i' 
                                 % (target_name, l, rev_count)
                                 )
                             sys.stdout.flush()
@@ -878,26 +910,48 @@ def scrape_target_info(df_query_municipalities, municipalities_to_be_scraped):
             for attr in attributes_restaurant: 
                 data[attr] = data[attr]*rev_count # expand fixed restaurant info
             df = pd.DataFrame.from_dict(data)
-
-            ### save dataframe per restaurant after some basic checks, keep log 
+            
+            ### save dataframe per restaurant after some basic checks, keep log
+            # Drop duplicates: last resort technique to prevent that translated reviews
+            # appear twice (usually the check in the review loop works, but not always). 
+            df.drop_duplicates(subset=['review_id'], keep='last', inplace=True)
             missings = df.isnull().sum().sum()
             rev_count_site = int(re.sub(r'[^\d]+', '', 
                 driver.find_element(By.CSS_SELECTOR, 'span.reviews_header_count').text
                 ))
             if (len(df)==0):
-                print('\n │  ├─ Dataframe not saved: Length is 0')
-                break
-            elif (len(df) != rev_count_site):
-                print('\n │  ├─ Dataframe not saved: Length differs from page review count ('
-                    + str(len(df)) + ' vs. ' + str(rev_count_site) + ')'
+                print('\n │  └─ ' + Fore.YELLOW + 'Dataframe not saved: Length is 0' 
+                      + Style.RESET_ALL)
+                continue                
+            elif (len(df) < rev_count_site):
+                # A scraped review count lower than the review count on page usually happens
+                # when reviews do not load properly. There might also be a slight chance that 
+                # new reviews get added while we scrape, but this is uncheckable in the process. 
+                # A new scraping iteration should fix both.
+                # A higher review count does not matter as long as there are no duplicates (which
+                # is fixed above). Also: The Tripadvisor count is sometimes 1 too large. 
+                print('\n │  └─ ' + Fore.YELLOW 
+                        + 'Dataframe not saved: Length (after dropping potential duplicates) is' 
+                        + 'smaller than page review count ('+ str(len(df)) + ' vs. ' 
+                        + str(rev_count_site) + ')' + Style.RESET_ALL
                     )
-                break
+                continue
             elif (missings > (0.5*len(df)*len(df.columns))):
-                print('\n │  ├─ Dataframe not saved: >50 % ('
-                    + str(missings) + '/' + str(len(df)*len(df.columns)) + ') missing.'
+                print('\n │  └─ ' + Fore.YELLOW + 'Dataframe not saved: >50 % ('
+                      + str(missings) + '/' + str(len(df)*len(df.columns)) + ') missing.'
+                      + Style.RESET_ALL
                     )
-                break
+                continue
             else:
+                # Use categorical dtypes wherever possible
+                columns_categorical = [
+                    'id', 'name', 'url', 'street_w_no', 'postcode', 'municipality', 'ags', 
+                    'cuisine1', 'cuisine2', 'cuisine3', 'review_user_name', 'review_user_gender', 
+                    'review_user_age', 'review_user_municipality', 'review_user_country', 
+                    'review_user_id', 'review_language'
+                ]
+                for col in columns_categorical:
+                    df[col] = df[col].astype('category')
                 # save under temp (will be deleted after dataset is complete for municipality)
                 # data can be feather instead of CSV
                 relpath_results_restaurants = (
@@ -906,7 +960,8 @@ def scrape_target_info(df_query_municipalities, municipalities_to_be_scraped):
                     + '_' + ags + '_'+ target_id + '.feather'
                     )
                 df.reset_index().to_feather(wd + relpath_results_restaurants)
-                print('\n │  └─ Dataframe saved: ' + relpath_results_restaurants)
+                print('\n │  └─ ' + Fore.GREEN + 'Dataframe saved: ' 
+                        + relpath_results_restaurants + Style.RESET_ALL)
                 # add path to restaurant query file
                 df_query_restaurants['scraped'].mask(
                     df_query_restaurants['id'] == target_id, 
@@ -924,9 +979,8 @@ def scrape_target_info(df_query_municipalities, municipalities_to_be_scraped):
                 if (r==0):
                     df_results_municipality = df_restaurant
                 else:
-                    df_results_municipality = pd.concat(
-                        [df_results_municipality, df_restaurant], 
-                        ignore_index=True
+                    df_results_municipality = concat_dfs_with_cat_data(
+                        [df_results_municipality, df_restaurant]
                         )
             
             # save feather and delete delete restaurant result spreadsheets when successful
@@ -940,15 +994,21 @@ def scrape_target_info(df_query_municipalities, municipalities_to_be_scraped):
                     wd + relpath_results_municipality
                     )
                 save_success = True
-                print(' ├─ Merged dataset saved: ' + relpath_results_municipality)
-                print(' └─ ' + track_status_in_readme(c, len(df_query_municipalities)))
+                print(' ├─ ' + Fore.GREEN + 'Merged dataset saved: ' 
+                      + relpath_results_municipality + Style.RESET_ALL)
+                print(' └─ ' + Fore.GREEN + track_status_in_readme(c, len(df_query_municipalities))
+                      + Style.RESET_ALL)
             except Exception:
                 save_success = False
-                print(' └─ Merged dataset for ' + municipality + ' could not be saved.')
+                print(' └─ ' + Fore.RED + 'Merged dataset for ' + municipality 
+                      + ' could not be saved.' + Style.RESET_ALL)
             if (save_success == True):
-                # delete temp files
+                # delete temp files (if any)
                 for relpath_results_restaurants in df_query_restaurants['scraped']:
-                    os.remove(wd + relpath_results_restaurants)
+                    try:
+                        os.remove(wd + relpath_results_restaurants)
+                    except FileNotFoundError:
+                        pass
                 # replace status in log files with link to feather file
                 df_query_municipalities['scraped'].mask(
                     df_query_municipalities['ags'] == ags, 
@@ -959,7 +1019,9 @@ def scrape_target_info(df_query_municipalities, municipalities_to_be_scraped):
                     wd + 'data/raw/tripadvisor_query_municipalities.csv', sep=";", index=False
                     )
         else:
-            print(' └─ Scraping results incomplete. Re-try next iteration, continuing for now...')
+            print(' └─ ' + Fore.YELLOW 
+                  + 'Scraping results incomplete. Re-try next iteration, continuing...'
+                  + Style.RESET_ALL)
             continue
     
     # re-init scraper after completion (will exit when everything is scraped)
@@ -973,4 +1035,47 @@ driver = webdriver.Firefox(
 )
 driver.implicitly_wait(1)
 wait = WebDriverWait(driver, 10) 
-init_scraper(driver, wait)
+time_start = time.perf_counter()
+# start scraper with some top-level exception handling
+restarts_after_error = 0
+try:
+    init_scraper(driver, wait)
+except (InvalidSessionIdException) as e:
+    # restart driver if connection to driver is lost (e.g. due to crash)
+    print('')
+    print(Fore.YELLOW + 'InvalidSessionIdException: ' + str(e))
+    if (restarts_after_error<3):
+        restarts_after_error+=1
+        print(Fore.YELLOW + 'Restarting scraper...' + Style.RESET_ALL)
+        print('')
+        driver = webdriver.Firefox(
+            service=Service(GeckoDriverManager().install()), 
+            options=options
+        )
+    else:
+        sys.exit(Fore.RED + 'Scraper stopped after 3 errors.' + Style.RESET_ALL)
+        print('Total running time: ' + str(time_start - time.perf_counter()))
+except (TimeoutException, StaleElementReferenceException) as e:
+    # when timeout occurs, wait for 1 minute and restart
+    print(Fore.YELLOW + 'TimeoutException/StaleElementReferenceException: ' + str(e))
+    if (restarts_after_error<3):
+        restarts_after_error+=1
+        print(Fore.YELLOW + 'Restarting scraper...' + Style.RESET_ALL)
+        print('')
+        time.sleep(60)
+        init_scraper(driver, wait)
+    else:
+        sys.exit(Fore.RED + 'Scraper stopped after 3 errors.' + Style.RESET_ALL)
+        print('Total running time: ' + str(time_start - time.perf_counter()))
+except (WebDriverException) as e:
+    # something like a net-error should induce a waiting time (10 minutes)
+    print(Fore.YELLOW + 'WebDriverException: ' + str(e))
+    if (restarts_after_error<3):
+        restarts_after_error+=1
+        print(Fore.YELLOW + 'Restarting scraper...' + Style.RESET_ALL)
+        print('')
+        time.sleep(600)
+        init_scraper(driver, wait)
+    else:
+        sys.exit(Fore.RED + 'Scraper stopped after 3 errors.' + Style.RESET_ALL)
+        print('Total running time: ' + str(time_start - time.perf_counter()))

@@ -6,6 +6,7 @@ dependencies:
   - python=3.8
   - jupyter # use latest, for interactive use
   - pylint # use latest, for interactive use
+  - colorama=0.4.*
   - beautifulsoup4=4.9.*
   - make=4.*
   - matplotlib=3.3.*
