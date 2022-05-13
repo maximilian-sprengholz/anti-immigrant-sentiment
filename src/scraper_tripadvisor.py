@@ -20,6 +20,7 @@ import pandas as pd
 from pandas.api.types import union_categoricals
 import time
 from datetime import datetime
+from datetime import timedelta
 import colorama
 from colorama import Fore
 from colorama import Style
@@ -610,11 +611,11 @@ def init_scraper(driver, wait):
             municipalities_to_be_scraped
             )
     else:
-        print('Total running time: ' + str(time_start - time.perf_counter()))
-        sys.exit(
-            Fore.GREEN 
-            + 'Information has been scraped for all municipalities and restaurants. Exiting...'
-        )
+        print('Information has been scraped for all municipalities and restaurants.')
+        print('Total running duration: ' 
+                 + str(timedelta(seconds=time.perf_counter()-time_start)))
+        sys.exit('Exiting...')
+
 
 def get_scraping_targets(
         df_input_municipalities, df_query_municipalities, municipalities_to_be_scraped
@@ -931,7 +932,7 @@ def scrape_target_info(df_query_municipalities, municipalities_to_be_scraped):
                 # A higher review count does not matter as long as there are no duplicates (which
                 # is fixed above). Also: The Tripadvisor count is sometimes 1 too large. 
                 print('\n │  └─ ' + Fore.YELLOW 
-                        + 'Dataframe not saved: Length (after dropping potential duplicates) is' 
+                        + 'Dataframe not saved: Length (after dropping potential duplicates) is ' 
                         + 'smaller than page review count ('+ str(len(df)) + ' vs. ' 
                         + str(rev_count_site) + ')' + Style.RESET_ALL
                     )
@@ -996,8 +997,6 @@ def scrape_target_info(df_query_municipalities, municipalities_to_be_scraped):
                 save_success = True
                 print(' ├─ ' + Fore.GREEN + 'Merged dataset saved: ' 
                       + relpath_results_municipality + Style.RESET_ALL)
-                print(' └─ ' + Fore.GREEN + track_status_in_readme(c, len(df_query_municipalities))
-                      + Style.RESET_ALL)
             except Exception:
                 save_success = False
                 print(' └─ ' + Fore.RED + 'Merged dataset for ' + municipality 
@@ -1018,10 +1017,17 @@ def scrape_target_info(df_query_municipalities, municipalities_to_be_scraped):
                 df_query_municipalities.to_csv(
                     wd + 'data/raw/tripadvisor_query_municipalities.csv', sep=";", index=False
                     )
+                # update status in README
+                print(' └─ ' + Fore.GREEN 
+                      + track_status_in_readme(
+                          df_query_municipalities['scraped'].notnull().sum(), 
+                          len(df_query_municipalities)
+                          )
+                      + Style.RESET_ALL)
         else:
-            print(' └─ ' + Fore.YELLOW 
-                  + 'Scraping results incomplete. Re-try next iteration, continuing...'
-                  + Style.RESET_ALL)
+            print(' └─ ' + Fore.YELLOW + 'Dataset could not be merged for ' + municipality 
+                  + 'because scraping results are incomplete. Will re-try next iteration. ' 
+                  + 'Continuing...' + Style.RESET_ALL)
             continue
     
     # re-init scraper after completion (will exit when everything is scraped)
@@ -1053,8 +1059,10 @@ except (InvalidSessionIdException) as e:
             options=options
         )
     else:
-        sys.exit(Fore.RED + 'Scraper stopped after 3 errors.' + Style.RESET_ALL)
-        print('Total running time: ' + str(time_start - time.perf_counter()))
+        print(Fore.RED + 'Scraper stopped after 3 errors.' + Style.RESET_ALL)
+        print('Total running duration: ' 
+                 + str(timedelta(seconds=time.perf_counter()-time_start)))
+        sys.exit('Exiting...')
 except (TimeoutException, StaleElementReferenceException) as e:
     # when timeout occurs, wait for 1 minute and restart
     print(Fore.YELLOW + 'TimeoutException/StaleElementReferenceException: ' + str(e))
@@ -1065,8 +1073,10 @@ except (TimeoutException, StaleElementReferenceException) as e:
         time.sleep(60)
         init_scraper(driver, wait)
     else:
-        sys.exit(Fore.RED + 'Scraper stopped after 3 errors.' + Style.RESET_ALL)
-        print('Total running time: ' + str(time_start - time.perf_counter()))
+        print(Fore.RED + 'Scraper stopped after 3 errors.' + Style.RESET_ALL)
+        print('Total running duration: ' 
+                 + str(timedelta(seconds=time.perf_counter()-time_start)))
+        sys.exit('Exiting...')
 except (WebDriverException) as e:
     # something like a net-error should induce a waiting time (10 minutes)
     print(Fore.YELLOW + 'WebDriverException: ' + str(e))
@@ -1077,5 +1087,7 @@ except (WebDriverException) as e:
         time.sleep(600)
         init_scraper(driver, wait)
     else:
-        sys.exit(Fore.RED + 'Scraper stopped after 3 errors.' + Style.RESET_ALL)
-        print('Total running time: ' + str(time_start - time.perf_counter()))
+        print(Fore.RED + 'Scraper stopped after 3 errors.' + Style.RESET_ALL)
+        print('Total running duration: ' 
+                 + str(timedelta(seconds=time.perf_counter()-time_start)))
+        sys.exit('Exiting...')
