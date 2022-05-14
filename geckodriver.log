@@ -10150,3 +10150,267 @@ JavaScript error: , line 0: NS_ERROR_NOT_AVAILABLE
 1652473612655	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
 1652473672413	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
 1652473673412	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652473748223	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652473749280	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652473905178	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652473907026	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652473973366	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652473974091	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652474015359	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652474016152	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652474065837	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652474067107	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652474121049	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652474122066	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652474256830	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652474258192	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652474282789	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652474284027	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652474369959	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652474370999	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652474418232	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652474419760	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652474448003	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652474449019	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652474487358	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652474488824	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652474518106	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652474519337	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652474561506	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652474562708	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652474590032	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652474591319	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652474623430	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652474624876	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652474653169	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652474654387	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652474683650	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652474684542	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652474720086	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652474721873	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652517972045	geckodriver	INFO	Listening on 127.0.0.1:52201
+1652517974053	mozrunner::runner	INFO	Running command: "C:\\Program Files\\Mozilla Firefox\\firefox.exe" "--marionette" "-headless" "--remote-debugging-port" "52202" "--remote-allow-hosts" "localhost" "-no-remote" "-profile" "C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofilel5zsWH"
+*** You are running in headless mode.
+console.error: GPOParser.jsm: 
+  Unable to parse JSON for ExtensionSettings
+console.error: Enterprise Policies: 
+  Policy SearchEngines is only allowed on ESR
+1652517975720	Marionette	INFO	Marionette enabled
+console.error: Policies.jsm: 
+  OfferToSaveLoginsDefault ignored because OfferToSaveLogins is present.
+[GFX1-]: RenderCompositorSWGL failed mapping default framebuffer, no dt
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofilel5zsWH\\search.json.mozlz4", (void 0)))
+DevTools listening on ws://localhost:52202/devtools/browser/59e8dc00-c3ce-4a37-b9ed-f5610d7f45fb
+1652517979996	Marionette	INFO	Listening on port 52313
+Read port: 52313
+1652517980139	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+1652517991621	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652517992439	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652518019498	geckodriver	INFO	Listening on 127.0.0.1:52753
+1652518021505	mozrunner::runner	INFO	Running command: "C:\\Program Files\\Mozilla Firefox\\firefox.exe" "--marionette" "-headless" "--remote-debugging-port" "52754" "--remote-allow-hosts" "localhost" "-no-remote" "-profile" "C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofilecPQhcP"
+*** You are running in headless mode.
+console.error: GPOParser.jsm: 
+  Unable to parse JSON for ExtensionSettings
+console.error: Enterprise Policies: 
+  Policy SearchEngines is only allowed on ESR
+1652518022003	Marionette	INFO	Marionette enabled
+console.error: Policies.jsm: 
+  OfferToSaveLoginsDefault ignored because OfferToSaveLogins is present.
+[GFX1-]: RenderCompositorSWGL failed mapping default framebuffer, no dt
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofilecPQhcP\\search.json.mozlz4", (void 0)))
+DevTools listening on ws://localhost:52754/devtools/browser/70a5f385-e9a1-419e-9742-7ff7e40103bb
+1652518025147	Marionette	INFO	Listening on port 52845
+Read port: 52845
+1652518025226	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+1652518037601	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652518039068	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652518662263	geckodriver	INFO	Listening on 127.0.0.1:59131
+1652518664243	mozrunner::runner	INFO	Running command: "C:\\Program Files\\Mozilla Firefox\\firefox.exe" "--marionette" "-headless" "--remote-debugging-port" "59132" "--remote-allow-hosts" "localhost" "-no-remote" "-profile" "C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofile3ivkzs"
+*** You are running in headless mode.
+console.error: GPOParser.jsm: 
+  Unable to parse JSON for ExtensionSettings
+console.error: Enterprise Policies: 
+  Policy SearchEngines is only allowed on ESR
+1652518664794	Marionette	INFO	Marionette enabled
+console.error: Policies.jsm: 
+  OfferToSaveLoginsDefault ignored because OfferToSaveLogins is present.
+[GFX1-]: RenderCompositorSWGL failed mapping default framebuffer, no dt
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofile3ivkzs\\search.json.mozlz4", (void 0)))
+DevTools listening on ws://localhost:59132/devtools/browser/8d3da553-11b2-4414-835d-56df3cdd3242
+1652518668003	Marionette	INFO	Listening on port 59213
+Read port: 59213
+1652518668134	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+1652518679070	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652518680712	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652519125607	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652519126209	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652519282040	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652519282658	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+JavaScript error: , line 0: NS_ERROR_NOT_AVAILABLE
+1652519515936	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652519516337	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652519682250	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652519682956	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652519784162	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652519784821	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652519916928	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652519917451	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652520063272	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652520063751	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652520209673	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652520210558	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652520272191	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652520272559	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652520350243	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652520350505	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652520504489	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652520505550	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652520573755	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652520574749	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652520616331	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652520617093	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652520665455	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652520666545	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652520720507	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652520721246	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652520857870	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652520858625	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652520887138	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652520887744	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652520979875	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652520981732	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652521047043	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652521047525	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652521078436	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652521078941	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652521118110	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652521119093	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652521149435	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652521150374	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652521194312	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652521195287	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652521224147	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652521225441	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652521258424	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652521259713	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652521288913	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652521289965	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652521319561	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652521320452	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652523257943	geckodriver	INFO	Listening on 127.0.0.1:51728
+1652523259942	mozrunner::runner	INFO	Running command: "C:\\Program Files\\Mozilla Firefox\\firefox.exe" "--marionette" "-headless" "--remote-debugging-port" "51729" "--remote-allow-hosts" "localhost" "-no-remote" "-profile" "C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofilejBnFqn"
+*** You are running in headless mode.
+console.error: GPOParser.jsm: 
+  Unable to parse JSON for ExtensionSettings
+console.error: Enterprise Policies: 
+  Policy SearchEngines is only allowed on ESR
+1652523261035	Marionette	INFO	Marionette enabled
+console.error: Policies.jsm: 
+  OfferToSaveLoginsDefault ignored because OfferToSaveLogins is present.
+[GFX1-]: RenderCompositorSWGL failed mapping default framebuffer, no dt
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofilejBnFqn\\search.json.mozlz4", (void 0)))
+DevTools listening on ws://localhost:51729/devtools/browser/dedf24e1-c5a1-400a-9909-168f86b22ecd
+1652523265439	Marionette	INFO	Listening on port 51807
+Read port: 51807
+1652523265635	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+1652523275788	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652523276857	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652523706085	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652523706916	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652523859085	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652523859803	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+JavaScript error: , line 0: NS_ERROR_NOT_AVAILABLE
+1652524100541	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652524100925	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652525440227	geckodriver	INFO	Listening on 127.0.0.1:51584
+1652525442232	mozrunner::runner	INFO	Running command: "C:\\Program Files\\Mozilla Firefox\\firefox.exe" "--marionette" "-headless" "--remote-debugging-port" "51585" "--remote-allow-hosts" "localhost" "-no-remote" "-profile" "C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofile9r7Lq5"
+*** You are running in headless mode.
+console.error: GPOParser.jsm: 
+  Unable to parse JSON for ExtensionSettings
+console.error: Enterprise Policies: 
+  Policy SearchEngines is only allowed on ESR
+1652525442720	Marionette	INFO	Marionette enabled
+console.error: Policies.jsm: 
+  OfferToSaveLoginsDefault ignored because OfferToSaveLogins is present.
+[GFX1-]: RenderCompositorSWGL failed mapping default framebuffer, no dt
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofile9r7Lq5\\search.json.mozlz4", (void 0)))
+DevTools listening on ws://localhost:51585/devtools/browser/6c0c6e51-03ab-450f-a8d1-53ff1ddb0ee7
+1652525445350	Marionette	INFO	Listening on port 51645
+Read port: 51645
+1652525445476	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+1652525454564	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652525455031	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+JavaScript error: , line 0: NS_ERROR_NOT_AVAILABLE
+1652526316196	geckodriver	INFO	Listening on 127.0.0.1:57262
+1652526318227	mozrunner::runner	INFO	Running command: "C:\\Program Files\\Mozilla Firefox\\firefox.exe" "--marionette" "-headless" "--remote-debugging-port" "57264" "--remote-allow-hosts" "localhost" "-no-remote" "-profile" "C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofileHdCNjR"
+*** You are running in headless mode.
+console.error: GPOParser.jsm: 
+  Unable to parse JSON for ExtensionSettings
+console.error: Enterprise Policies: 
+  Policy SearchEngines is only allowed on ESR
+1652526318563	Marionette	INFO	Marionette enabled
+console.error: Policies.jsm: 
+  OfferToSaveLoginsDefault ignored because OfferToSaveLogins is present.
+[GFX1-]: RenderCompositorSWGL failed mapping default framebuffer, no dt
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofileHdCNjR\\search.json.mozlz4", (void 0)))
+DevTools listening on ws://localhost:57264/devtools/browser/c48aedd8-0245-4751-a673-48f9959514d0
+1652526320911	Marionette	INFO	Listening on port 57329
+Read port: 57329
+1652526321082	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+1652526330340	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652526331501	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652526993958	geckodriver	INFO	Listening on 127.0.0.1:61589
+1652526996022	mozrunner::runner	INFO	Running command: "C:\\Program Files\\Mozilla Firefox\\firefox.exe" "--marionette" "-headless" "--remote-debugging-port" "61590" "--remote-allow-hosts" "localhost" "-no-remote" "-profile" "C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofilemD0u79"
+*** You are running in headless mode.
+console.error: GPOParser.jsm: 
+  Unable to parse JSON for ExtensionSettings
+console.error: Enterprise Policies: 
+  Policy SearchEngines is only allowed on ESR
+1652526996683	Marionette	INFO	Marionette enabled
+console.error: Policies.jsm: 
+  OfferToSaveLoginsDefault ignored because OfferToSaveLogins is present.
+[GFX1-]: RenderCompositorSWGL failed mapping default framebuffer, no dt
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofilemD0u79\\search.json.mozlz4", (void 0)))
+DevTools listening on ws://localhost:61590/devtools/browser/1552a530-8168-41bd-911a-18b12a22b233
+1652526998834	Marionette	INFO	Listening on port 61642
+Read port: 61642
+1652526998933	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+1652527008041	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652527008539	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652527503903	geckodriver	INFO	Listening on 127.0.0.1:64841
+1652527505927	mozrunner::runner	INFO	Running command: "C:\\Program Files\\Mozilla Firefox\\firefox.exe" "--marionette" "-headless" "--remote-debugging-port" "64842" "--remote-allow-hosts" "localhost" "-no-remote" "-profile" "C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofileQR3Ma9"
+*** You are running in headless mode.
+console.error: GPOParser.jsm: 
+  Unable to parse JSON for ExtensionSettings
+console.error: Enterprise Policies: 
+  Policy SearchEngines is only allowed on ESR
+1652527506317	Marionette	INFO	Marionette enabled
+console.error: Policies.jsm: 
+  OfferToSaveLoginsDefault ignored because OfferToSaveLogins is present.
+[GFX1-]: RenderCompositorSWGL failed mapping default framebuffer, no dt
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofileQR3Ma9\\search.json.mozlz4", (void 0)))
+DevTools listening on ws://localhost:64842/devtools/browser/dc294ce2-b33f-4ae3-a4f0-5581732c119a
+1652527508622	Marionette	INFO	Listening on port 64904
+Read port: 64904
+1652527508795	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+1652527517960	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652527519196	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652527857526	geckodriver	INFO	Listening on 127.0.0.1:51405
+1652527859541	mozrunner::runner	INFO	Running command: "C:\\Program Files\\Mozilla Firefox\\firefox.exe" "--marionette" "-headless" "--remote-debugging-port" "51406" "--remote-allow-hosts" "localhost" "-no-remote" "-profile" "C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofileJ0iNKi"
+*** You are running in headless mode.
+console.error: GPOParser.jsm: 
+  Unable to parse JSON for ExtensionSettings
+console.error: Enterprise Policies: 
+  Policy SearchEngines is only allowed on ESR
+1652527860049	Marionette	INFO	Marionette enabled
+console.error: Policies.jsm: 
+  OfferToSaveLoginsDefault ignored because OfferToSaveLogins is present.
+[GFX1-]: RenderCompositorSWGL failed mapping default framebuffer, no dt
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at C:\\Users\\ADMIN~1.SPR\\AppData\\Local\\Temp\\rust_mozprofileJ0iNKi\\search.json.mozlz4", (void 0)))
+DevTools listening on ws://localhost:51406/devtools/browser/0f259309-fa93-4366-95e6-edc256891b84
+1652527863291	Marionette	INFO	Listening on port 51467
+Read port: 51467
+1652527863356	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+1652527874272	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1652527875460	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+JavaScript error: , line 0: NS_ERROR_NOT_AVAILABLE

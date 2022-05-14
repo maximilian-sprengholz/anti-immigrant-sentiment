@@ -42,4 +42,5 @@ except NameError:
 sys.path.append(wd + 'src')
 
 # check city datasets
-df = pd.read_feather(wd + 'data/temp/tripadvisor_results_restaurant_oelsnitzvogtland_14523300_g1931731d5511518.feather')
+df = pd.read_feather(wd + 'data/raw/tripdavisor_results_rostock_13003000.feather')
+df.to_excel(wd + 'data/raw/tripdavisor_results_rostock_13003000.xlsx', index=False)
