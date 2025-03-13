@@ -5,7 +5,7 @@ checksetup:
 	&& echo $$(which python)
 
 crawl_tripadvisor:
-	python src/crawler_googlemaps.py
+	python src/crawler_tripadvisor.py
 	
 crawl_googlemaps:
 	python src/crawler_googlemaps.py

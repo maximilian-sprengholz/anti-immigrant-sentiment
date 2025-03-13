@@ -63,9 +63,3 @@ make checksetup
 ## License
 
 This project is licensed under the terms of the [MIT License](/LICENSE.md)
-
-## Citation
-
-Please cite this project as:
-
-Daniel Auer, Christian Hunkler, Philipp Jaschke, Yuliya Kosyakova, Zerrin Salikutluk, Maximilian Sprengholz (2021). Anti-immigrant sentiment, version 0.1.0. Url: https://scm.cms.hu-berlin.de/sprenmax/anti-immigrant-sentiment
